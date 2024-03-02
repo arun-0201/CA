@@ -1,0 +1,111 @@
+//Without Overlapping
+
+	AREA sam,CODE,READONLY
+	LDR r0,=0x40000000;
+	LDR r1,=0x40000050;
+	LDR r2,[r0],#0x4;
+L	LDR r3,[r0],#0x4;
+	STR r3,[r1],#0x4;
+	SUBS r2,r2,#01;
+	BNE L
+	end
+
+//With Overlap
+
+	AREA sam,CODE,READONLY 
+
+	LDR r0, = 0x40000000 ;
+	LDR r2,[r0],#0x4 ;
+	ADD r3,r0,r2,LSL #2 ;
+L	LDR r4,[r3,#-0x4] ;
+	STR r4,[r3],#-0x4 ;
+	subs r2,r2,#01 ;
+	BNE L
+l	B l
+	END
+
+// ax^2 + bx + c
+
+	AREA quadexp,CODE,READONLY ; ax^2 + bx + c
+	
+	LDR r0,=0x40000000
+	LDM r0,{r1-r4} ;
+	MOV r1,#0x3;
+	MOV r2,#0x1;
+	MOV r3,#0x1;
+	MOV r4,#0x1;
+	MUL r5,r1,r1 ;
+	MUL r2,r5,r2 ;
+	MUL r1,r3,r1 ;
+	ADD r1,r1,r2 ;
+	ADD r1,r1,r4 ;
+	str r1,[r0,#0x10]
+l	b l
+	END
+
+//b^2 - 4ac 
+
+	AREA rootexp,CODE,READONLY ; b^2 - 4ac 
+	LDR r0,=0x40000000 
+	LDM r0,{r1-r3}
+	MUL r4,r2,r2
+	LSL r1,#2
+	MUL r5,r1,r3
+	SUB r6,r4,r5
+	STR r6,[r0,#0x0c]
+l	b l
+	END
+
+//Bubble Sort
+
+	AREA bubble , CODE , READONLY ;
+	LDR r0,=0x40000000
+	LDR r1 , [r0] ; No. of Elements
+	
+Outer 
+l	MOV r2 ,r1 ; Inner looping  variable 
+	LDR r0,=0x40000004
+Inner 
+	LDR r4,[r0]
+	LDR r5,[r0,#4]!
+	CMP r4,r5 
+	BLE Continue
+	STR r4,[r0]
+	STR r5,[r0,#-0x04]
+Continue
+	SUBS r2,r2,#1 
+	BNE Inner
+		SUBS r1,r1,#1
+	BNE Outer 
+		B l
+	END
+
+//Binary Search
+
+	AREA binary , CODE , READONLY 
+	
+	LDR r0,= 0x40000000 ;
+	MOV r13,#0x00 ;
+	LDRB r1,[r0] ;
+	LDRB r2,[r0,#0x01]! ;
+	MOV r3 ,#0x00 ;
+	MOV r4,r1 ;
+	
+rep CMP r3,r4
+	BGT exit 
+	ADD r5,r3,r4
+	LSR r5,#0x01 
+	LDRB r7,[r0,r5]
+	CMP r7,r2
+	BGE HE
+	ADD r3,r5,#0x01 ;
+	B rep
+	
+HE 	BEQ found 
+	SUB r4,r5,#0x01 
+	B rep
+
+found	MOV r13,#0x11
+exit
+L	B L
+	END
