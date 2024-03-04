@@ -1,0 +1,49 @@
+//Binary Search
+
+	AREA add1, CODE, READONLY
+ENTRY
+		LDR r0,=0x40000000
+		mov r13,#0x00
+		LDRB r1,[r0]   ; No of elements
+		LDRB r2,[r0,#0x01]! ; search elements
+		mov r3,#0x00 ;r3--low
+		mov r4,r1 ; r4 ... high
+rep		cmp r3,r4
+		BGT exit
+		add r5,r3,r4  ;l+h
+		LSR r5,#0x01  ;r5-- l+h/2
+		LDRB r7,[r0,r5]
+		cmp r7,r2      ;a[mid] & sesrch
+		BGE HE
+		add r3,r5,#0x01   ; low=mid+1
+		B rep
+HE		BEQ Found
+		sub r4,r5,#0x01   ; high=mid-1
+	    B rep
+		
+Found  mov r13,#0x11
+exit   
+L 		b L
+		end
+
+//Bubble Sort
+
+	AREA add1, CODE, READONLY
+ENTRY
+		LDR r0,=0x40000000
+		LDR r1,[r0]   ; No of elements
+	
+Outer 	mov r2,r1    ; inner looping variable 
+        LDR r0,=0x40000004     
+Inner	LDR r4,[r0]
+		LDR r5,[r0,#04]!
+		cmp r4,r5
+		BLE continue
+		str r4,[r0]
+		str r5,[r0,#-0x04]
+continue subs r2,r2,#1
+          BNE Inner
+	      subs r1,r1,#1
+          BNE Outer
+l		  B l
+	end
