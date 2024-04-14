@@ -1,0 +1,312 @@
+//LED using GPIO//
+
+#include<LPC21xx.h>
+void delay()
+{
+	int i,j;
+	for(i=0;i<1000;i++)
+	{
+		for(j=0;j<1000;j++){}
+	}
+}
+int main()
+{
+	IODIR1 = 0x00ff0000;
+	while(1)
+	{
+		IOSET1 = 0x00550000;
+		delay();
+		IOCLR1 = 0x00550000;
+		delay();
+		IOSET1 = 0x00aa0000;
+		delay();
+		IOCLR1 = 0x00aa0000;
+	}
+}
+		
+  
+
+// LED using Switch //
+
+#include<LPC21xx.h>
+void delay()
+{
+	int i,j;
+	for(i=0;i<1000;i++)
+	{
+		for(j=0;j<1000;j++){}
+	}
+}
+int main()
+{
+	IODIR0 = 0x00000000;
+	IODIR1 = 0x00ff0000;
+	while(1)
+	{
+		if(IO0PIN & 0x00004000)
+		{
+			IOSET1 = 0x00550000;
+			delay();
+			IOCLR1 = 0x00550000;
+			delay();
+		}
+		else
+		{
+			IOSET1 = 0x00aa0000;
+			delay();
+			IOCLR1 = 0x00aa0000;
+			delay();
+	 }
+	}
+}
+		
+  
+
+// TIMER ///
+
+#include<lpc214x.h>
+void delay(unsigned int a);
+void pll();
+int main(void)
+{
+IO1DIR=0XFFFFFFFF;
+pll();
+while(1)
+{
+IO1SET=0XFFFFFFFF;
+delay(1000);
+IO1CLR=0XFFFFFFFF;
+delay(1000);
+}
+}
+void pll()
+{
+	PLL0CON=0X01;
+	PLL0CFG=0X24;
+	PLL0FEED=0Xaa;
+	PLL0FEED=0X55;
+	while(!PLL0STAT & (1<<10));
+	PLL0CON=0X03;
+	PLL0FEED=0Xaa;
+	PLL0FEED=0X55;
+	VPBDIV=0X01;
+}
+void delay(unsigned int x)
+{
+	T0CTCR=0X0;
+	T0TCR=0X00;
+	T0PR=59999;
+	T0TCR=0X02;
+	T0TCR=0X01;
+	while(T0TC<x);
+	T0TCR=0X00;
+	T0TC=0;
+}
+
+// UART // 
+
+#include<LPC214X.h>
+void pll()
+{
+ PLL0CON=0X01;
+ PLL0CFG=0X24;
+ PLL0FEED=0XAA;
+ PLL0FEED=0X55;
+ while(!(PLL0STAT & (1<<10)));
+ PLL0CON=0X03;
+ PLL0FEED=0XAA;
+ PLL0FEED=0X55;
+ VPBDIV=0X01;
+ }
+ 
+ int main()
+ {
+  int C;
+  PINSEL0=0X00000005;
+  U0LCR=0X83;
+  U0DLL=0X87;
+  U0DLM=0X01;
+  U0LCR=0X03;
+  pll();
+  while(1)
+  {
+   while(! (U0LSR & 0X01));
+   C=U0RBR;
+   C=C+1;
+   while(! (U0LSR & 0X20));
+   U0THR=C;
+   }
+ }
+
+// ADC //
+
+#include<lpc214x.h>
+
+int main()
+{
+	unsigned int val;
+	val=0x000003ff;
+	PINSEL1=0X01000000;
+	SCS=0X02;
+	FIO1MASK=0XFF00FFFF;
+	FIO1DIR=0X00FF0000;
+	FIO1PIN=0X00000000;
+	AD0CR=0X00200E02;
+	while(1)
+	{
+		AD0CR|=0X01000000;
+		do
+		{
+		val=AD0DR1;
+		}
+		while((val&0X80000000)==0);
+		FIO1PIN=(val<<8);
+	}
+	 return 0;
+}
+
+// Interrupt //
+
+#include<lpc214x.h>
+void delay(void);
+void ext_int_init();
+void Ext_ISR(void);
+int main(void)
+{
+IODIR0=0X00000000;
+IO1DIR=0X00FF0000;
+ext_int_init();
+while(1)
+{
+IO1SET=0X00FF0000;
+delay();
+IO1CLR=0X00FF0000;
+delay();
+}
+}
+void ext_int_init()
+{
+EXTMODE=0X2;
+EXTPOLAR&=~(0X2);
+PINSEL0=0X20000000;
+VICIntSelect &= ~(1<<15);
+VICVectAddr5=(unsigned int)Ext_ISR;
+VICVectCntl5=(1<<5)|15;
+VICIntEnable=(1<<5);
+}
+void Ext_ISR(void)
+{
+IO1SET=0X00550000;
+delay();
+IO1CLR=0X00550000;
+EXTINT |=0X2;
+VICVectAddr=0;
+}
+void delay()
+{
+int i,j;
+for(i=0;i<4000;i++)
+{
+for(j=0;j<4000;j++)
+{
+}
+}
+}
+
+// GPIO// 
+
+/*#include<LPC21XX.h>
+
+void delay()
+{
+	int i,j;
+	for (i=0;i<1000;i++){}
+	for (j=0;j<1000;j++){}
+}
+
+
+int main()
+{
+	PINSEL0=0x00000000;
+	IO0DIR=0x00000000;
+	while(1)
+	{
+		IOSET0=0X00005555;
+		delay ();
+		IOCLR0=0X00005555;
+		delay ();
+		return 0;
+	}
+}*/
+
+#include<lpc21xx.h>
+
+void delay(void);
+
+int main()
+
+{
+
+IODIR0=0xFFFFFFFF;
+
+while(1)
+
+{
+
+IOSET0=0x0F00;
+
+delay();
+
+IOCLR0=0x0F00;
+
+delay();
+
+}
+
+}
+
+void delay(void)
+
+
+{
+
+int i;
+
+for(i=0;i<=600000;i++);
+
+}
+
+
+// Stepper Motor //
+
+#include <LPC214X.H> /* For 360 degree, a=200*/
+
+void delay(unsigned int count)
+{
+  unsigned int i ,j= 0;
+  for(i = 0; i <= count; i ++)
+  for(j = 0; j <= 80; j ++);
+}
+
+unsigned long i;
+
+int main()
+{
+	int a=200;
+  IODIR1 = 0x00FF0000;
+  i = 0x00010000;
+	while(a)
+{
+
+	IO1SET=i;
+	delay(10000);
+	IO1CLR=0x000F0000;
+		i=i<<1;
+	//delay(10000);
+	if(i==0x00100000)
+		{
+		i=0x00010000;
+		}
+	a=a-1;
+	}
+}
