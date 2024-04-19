@@ -9,7 +9,7 @@ L	LDR r3,[r0],#0x4;
 	SUBS r2,r2,#01;
 	BNE L
 	end
-
+-----------------------------------------------------------------------------------------------------------
 //With Overlap
 
 	AREA sam,CODE,READONLY
@@ -23,6 +23,8 @@ L 	ldr r4,[r0],#0x4
 	BNE L 
 l 	B l
 end
+
+-----------------------------------------------------------------------------------------------------------
 
 // ax^2 + bx + c
 
@@ -39,6 +41,8 @@ end
 l	b l
 	END
 
+-----------------------------------------------------------------------------------------------------------
+
 //b^2 - 4ac 
 
 	AREA rootexp,CODE,READONLY ; b^2 - 4ac 
@@ -51,6 +55,44 @@ l	b l
 	STR r6,[r0,#0x0c]
 l	b l
 	END
+
+-----------------------------------------------------------------------------------------------------------
+
+//Factorial
+
+	AREA factstack, CODE, READONLY 
+
+    LDR r0, =0x40000000
+    LDR r1, [r0]
+    MOV r2, #1
+    BL lpush          ; Call the function lpush
+    STR r2, [r0]
+l   B l
+
+lpush
+    SUB sp, sp, #8
+    STR lr, [sp, #4]
+    STR r1, [sp]
+    CMP r1, #1
+    BGT loop
+    B lpop
+
+loop
+    SUB r1, r1, #1
+    BL lpush          ; Call the function lpush recursively
+    B lpop
+
+lpop
+    LDR r1, [sp]
+    LDR lr, [sp, #4]
+    ADD sp, sp, #8
+    CMP r1, #0
+    MUL r2, r1, r2
+    MOV pc, lr
+
+    END
+
+-----------------------------------------------------------------------------------------------------------
 
 //Bubble Sort
 
@@ -85,6 +127,7 @@ l   b l                    ; Branch to the end of the program
 
 end
 
+-----------------------------------------------------------------------------------------------------------
 
 //Binary Search
 
