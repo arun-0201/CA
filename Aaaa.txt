@@ -442,36 +442,27 @@ lpop
 
 //Bubble Sort
 
-		AREA sort, CODE, READONLY
-
-start
-    ldr r0, =0x40000000    ; Load the memory address of the array into r0
-    ldr r1, [r0]           ; Load the number of elements into r1
-
-outerLoop
-    mov r2, r1             ; Copy the number of elements to r2 for the inner loop counter
-    ldr r3, =0x40000004    ; Load the address of the first element into r3
-
-innerLoop
-    ldr r4, [r3]           ; Load current element
-    ldr r5, [r3],#0x4      ; Load next element and increment pointer
-
-    cmp r4, r5
-    ble continueLoop       ; If r4 <= r5, continue
-
-    str r4, [r3]           ; Store next element in the current position
-    str r5, [r3, #-0x4]      ; Store current element in the next position
-
-continueLoop
-    subs r2, r2, #1        ; Decrement the inner loop counter
-    bne innerLoop          ; Repeat inner loop if counter is not zero
-
-    subs r1, r1, #1        ; Decrement the outer loop counter
-    bne outerLoop          ; Repeat outer loop if counter is not zero
-
-l   b l                    ; Branch to the end of the program
-
-end
+;Bubble Sort
+	AREA bubble,CODE,READONLY
+START
+	LDR R0,=0X40000000
+	LDR R1,[R0]
+OUTER
+	MOV R2,R1
+	LDR R0,=0X40000004
+INNER
+	LDR R4,[R0]
+	LDR R5,[R0,#04]!
+	CMP R4,R5
+	BLE CONTINUE
+	STR R4,[R0]
+	STR R5,[R0,#-0X04]
+CONTINUE
+	SUBS R2,R2,#01
+	BNE INNER
+l
+	B l
+	END
 
 -----------------------------------------------------------------------------------------------------------
 
