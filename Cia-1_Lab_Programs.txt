@@ -149,3 +149,31 @@ found	MOV r13,#0x11
 exit
 L	B L
 	END
+
+------------------------------------------------------------------------------------------------------------
+
+//Linear Search
+
+;Linear Search
+	AREA sanjay,CODE,READONLY
+START
+	LDR R0,=0X40000000
+	LDR R5,=0X40000050
+	MOV R6,#0XFF
+	LDR R1,[R0],#0X04
+	LDR R2,[R0],#0X04
+REP
+	LDR R3,[R0],#0X04
+	CMP R3,R1
+	BEQ FND
+	SUBS R2,R2,#01
+	BNE REP
+	B STOP
+FND	
+	MOV R6,#0X11
+STOP
+	STR R6,[R5]
+l
+	B l
+	END
+	
