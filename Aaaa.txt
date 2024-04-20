@@ -223,7 +223,54 @@ void delay()
 	}
 }
 
+/*
 
+#include<LPC214X.h>
+void delay(void);
+__irq void Ext(void)
+{
+	int i=5;
+	while(i)
+	{
+		IO1SET=0X00550000;
+		delay();
+		IO1CLR=0X00550000;
+		delay();
+		i--;
+	}
+	EXTINT |=0X02;
+	VICVectAddr=0;
+}
+void ext()
+{
+	EXTMODE=0X02;
+	EXTPOLAR &=~(0X02);
+	PINSEL0=0X20000000;
+	VICIntSelect &=~(1<<15);
+	VICVectAddr5=(unsigned int)Ext;
+	VICVectCntl5=(1<<5)| 15;
+	VICIntEnable=(1<<15);
+}
+int main(void)
+{
+	IO0DIR=0X00000000;
+	IO1DIR=0X00FF0000;
+	ext();
+	while(1)
+	{
+		IO1SET=0X00FF0000;
+		delay();
+		IO1CLR=0X00FF0000;
+		delay();
+	}
+}
+void delay()
+{
+	int i,j;
+	for(i=0;i<1000;i++)
+		for(j=0;j<1000;j++);
+}
+*/
 -------------------------------------------------------------------------------------------------------------------------
 
 // GPIO// 
