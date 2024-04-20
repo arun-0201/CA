@@ -155,7 +155,7 @@ L	B L
 //Linear Search
 
 ;Linear Search
-	AREA sanjay,CODE,READONLY
+	AREA linear,CODE,READONLY
 START
 	LDR R0,=0X40000000
 	LDR R5,=0X40000050
