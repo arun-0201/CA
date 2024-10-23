@@ -1,626 +1,1018 @@
-//LED using GPIO//
+clc;
+clear all;
+close all;
+% fs = 84100;
+[x,fs] = audioread('C:\Users\SASTRA\Desktop\Sample.wav');
+% [x,fs] = audioread('C:\Users\SASTRA\Desktop\suspense_strings_001wav-14805.mp3');
+x=x(:,2);
+x=x';
+dt = 1/fs;
+t = 0:dt:(length(x)*dt)-dt;
+% sound(x,fs/4);
+figure(1);
 
-#include<LPC21xx.h>
-void delay()
-{
-	int i,j;
-	for(i=0;i<1000;i++)
-	{
-		for(j=0;j<1000;j++){}
-	}
-}
-int main()
-{
-	IODIR1 = 0x00ff0000;
-	while(1)
-	{
-		IOSET1 = 0x00550000;
-		delay();
-		IOCLR1 = 0x00550000;
-		delay();
-		IOSET1 = 0x00aa0000;
-		delay();
-		IOCLR1 = 0x00aa0000;
-	}
-}
-		
------------------------------------------------------------------------------------------------------------------------- 
+subplot(5,1,1);
+plot(t,x); xlabel('Seconds'); ylabel('Amplitude');
+title('Original Signal');
+hold on;
 
-// LED using Switch //
-
-#include<LPC21xx.h>
-void delay()
-{
-	int i,j;
-	for(i=0;i<1000;i++)
-	{
-		for(j=0;j<1000;j++){}
-	}
-}
-int main()
-{
-	IODIR0 = 0x00000000;
-	IODIR1 = 0x00ff0000;
-	while(1)
-	{
-		if(IO0PIN & 0x00004000)
-		{
-			IOSET1 = 0x00550000;
-			delay();
-			IOCLR1 = 0x00550000;
-			delay();
-		}
-		else
-		{
-			IOSET1 = 0x00aa0000;
-			delay();
-			IOCLR1 = 0x00aa0000;
-			delay();
-	 }
-	}
-}
-		
-
--------------------------------------------------------------------------------------------------------------------------
-
-// TIMER ///
-
-#include<lpc214x.h>
-void delay(unsigned int a);
-void pll();
-int main(void)
-{
-	IO1DIR=0XFFFFFFFF;
-	pll();
-	while(1)
-	{
-		IO1SET=0XFFFFFFFF;
-		delay(1000);
-		IO1CLR=0XFFFFFFFF;
-		delay(1000);
-	}
-}
-void pll()
-{
-	PLL0CON=0X01;
-	PLL0CFG=0X24;
-	PLL0FEED=0Xaa;
-	PLL0FEED=0X55;
-	while(!PLL0STAT & (1<<10));
-	PLL0CON=0X03;
-	PLL0FEED=0Xaa;
-	PLL0FEED=0X55;
-	VPBDIV=0X01;
-}
-void delay(unsigned int x)
-{
-	T0CTCR=0X0;
-	T0TCR=0X00;
-	T0PR=59999;
-	T0TCR=0X02;
-	T0TCR=0X01;
-	while(T0TC<x);
-	T0TCR=0X00;
-	T0TC=0;
-}
-
-
--------------------------------------------------------------------------------------------------------------------------
-
-// UART // 
-
-#include<LPC214X.h>
-void pll()
-{
-	 PLL0CON=0X01;
-	 PLL0CFG=0X24;
-	 PLL0FEED=0XAA;
-	 PLL0FEED=0X55;
-	 while(!(PLL0STAT & (1<<10)));
-	 PLL0CON=0X03;
-	 PLL0FEED=0XAA;
-	 PLL0FEED=0X55;
-	 VPBDIV=0X01;
- }
+l=length(t);
+l1=nextpow2(l); 
+l2=2^l1;
+y=fft(x,l2); %l2 point fft %y is freq domain of x
+y1=y(1:l2/2);
+xaxis=linspace(0,fs/2,l2/2);
+subplot(3,1,2); % Magnitude Plot of Signal
+plot(xaxis, abs(y1));
+title('Magnitude Response of the Original Signal'); hold on;
  
- int main()
- {
-	  int C;
-	  PINSEL0=0X00000005;
-	  U0LCR=0X83;
-	  U0DLL=0X87;
-	  U0DLM=0X01;
-	  U0LCR=0X03;
-	  pll();
-	  while(1)
-	  {
-		   while(! (U0LSR & 0X01));
-		   C=U0RBR;
-		   C=C+1;
-		   while(! (U0LSR & 0X20));
-		   U0THR=C;
-	   }
- }
-
-
--------------------------------------------------------------------------------------------------------------------------
-
-// ADC //
-
-#include<lpc214x.h>
-
-int main()
-{
-	unsigned int val;
-	val=0x000003ff;
-	PINSEL1=0X01000000;
-	SCS=0X02;
-	FIO1MASK=0XFF00FFFF;
-	FIO1DIR=0X00FF0000;
-	FIO1PIN=0X00000000;
-	AD0CR=0X00200E02;
-	while(1)
-	{
-		AD0CR|=0X01000000;
-		do
-		{
-		val=AD0DR1;
-		}
-		while((val&0X80000000)==0);
-		FIO1PIN=(val<<8);
-	}
-	 return 0;
-}
-
-
--------------------------------------------------------------------------------------------------------------------------
-
-// Interrupt //
-
-#include<lpc214x.h>
-void delay(void);
-void ext_int_init();
-void Ext_ISR(void);
-int main(void)
-{
-	IODIR0=0X00000000;
-	IO1DIR=0X00FF0000;
-	ext_int_init();
-	while(1)
-	{
-		IO1SET=0X00FF0000;
-		delay();
-		IO1CLR=0X00FF0000;
-		delay();
-	}
-}
-void ext_int_init()
-{
-	EXTMODE=0X2;
-	EXTPOLAR&=~(0X2);
-	PINSEL0=0X20000000;
-	VICIntSelect &= ~(1<<15);
-	VICVectAddr5=(unsigned int)Ext_ISR;
-	VICVectCntl5=(1<<5)|15;
-	VICIntEnable=(1<<5);
-}
-void Ext_ISR(void)
-{
-	IO1SET=0X00550000;
-	delay();
-	IO1CLR=0X00550000;
-	EXTINT |=0X2;
-	VICVectAddr=0;
-}
-void delay()
-{
-	int i,j;
-	for(i=0;i<4000;i++)
-	{
-		for(j=0;j<4000;j++)
-		{
-		}
-	}
-}
-
-/*
-
-#include<LPC214X.h>
-void delay(void);
-__irq void Ext(void)
-{
-	int i=5;
-	while(i)
-	{
-		IO1SET=0X00550000;
-		delay();
-		IO1CLR=0X00550000;
-		delay();
-		i--;
-	}
-	EXTINT |=0X02;
-	VICVectAddr=0;
-}
-void ext()
-{
-	EXTMODE=0X02;
-	EXTPOLAR &=~(0X02);
-	PINSEL0=0X20000000;
-	VICIntSelect &=~(1<<15);
-	VICVectAddr5=(unsigned int)Ext;
-	VICVectCntl5=(1<<5)| 15;
-	VICIntEnable=(1<<15);
-}
-int main(void)
-{
-	IO0DIR=0X00000000;
-	IO1DIR=0X00FF0000;
-	ext();
-	while(1)
-	{
-		IO1SET=0X00FF0000;
-		delay();
-		IO1CLR=0X00FF0000;
-		delay();
-	}
-}
-void delay()
-{
-	int i,j;
-	for(i=0;i<1000;i++)
-		for(j=0;j<1000;j++);
-}
-*/
--------------------------------------------------------------------------------------------------------------------------
-
-// GPIO// 
-
-/*#include<LPC21XX.h>
-
-void delay()
-{
-	int i,j;
-	for (i=0;i<1000;i++){}
-	for (j=0;j<1000;j++){}
-}
-
-
-int main()
-{
-	PINSEL0=0x00000000;
-	IO0DIR=0x00000000;
-	while(1)
-	{
-		IOSET0=0X00005555;
-		delay ();
-		IOCLR0=0X00005555;
-		delay ();
-		return 0;
-	}
-}*/
-
-#include<lpc21xx.h>
-void delay(void);
-int main()
-{
-	IODIR0=0xFFFFFFFF;
-	while(1)
-	{
-		IOSET0=0x0F00;
-		delay();
-		IOCLR0=0x0F00;
-		delay();
-	}
-}
-
-void delay(void)
-{
-	int i;
-	for(i=0;i<=600000;i++);
-}
-
-
--------------------------------------------------------------------------------------------------------------------------
-
-//Stepper Motor - Clock wise//
-
-#include<lpc214X.h>
-unsigned long i;
-void delay(unsigned int);
-int main()
-{
-	int a=200;
-	IO1DIR=0x00FF0000;
-	i=0X00080000;
-	while(a)
-	{
-		IO1SET=i;
-		delay(10000);
-		IO1CLR=0X00FF0000;
-		i=i>>1;
-		if(i==0X00008000)
-		{
-			i=0X00080000;
-		}
-		a=a-1;
-	}
-}
-
-void delay(unsigned int count)
-{
-	unsigned int i,j;
-	for(i=0;i<=count;i++)
-	for(j=0;j<=89;j++);
-}
-
-
--------------------------------------------------------------------------------------------------------------------------
-
-// Stepper Motor -anti clock wise//
-
-#include <LPC214X.H> /* For 360 degree, a=200*/
-
-void delay(unsigned int count)
-{
-  unsigned int i ,j= 0;
-  for(i = 0; i <= count; i ++)
-  for(j = 0; j <= 80; j ++);
-}
-
-unsigned long i;
-
-int main()
-{
-	int a=200;
-  	IODIR1 = 0x00FF0000;
-  	i = 0x00010000;
-	while(a)
-	{
-		IO1SET=i;
-		delay(10000);
-		IO1CLR=0x000F0000;
-			i=i<<1;
-		//delay(10000);
-		if(i==0x00100000)
-		{
-			i=0x00010000;
-		}
-		a=a-1;
-	}
-}
-
---------------------------------------------------------------------------------
-
-//Without Overlapping
-
-	AREA sam,CODE,READONLY
-	LDR r0,=0x40000000;
-	LDR r1,=0x40000050;
-	LDR r2,[r0],#0x4;
-L	LDR r3,[r0],#0x4;
-	STR r3,[r1],#0x4;
-	SUBS r2,r2,#01;
-	BNE L
-	end
------------------------------------------------------------------------------------------------------------
-//With Overlap
-
-	AREA sam,CODE,READONLY
-start
-	LDR r0,=0x40000000 
-	LDR r2,[r0],#0x4 
-	add r3,r0,r2, LSL #2 
-L 	ldr r4,[r0],#0x4 
-	str r4,[r3],#0x4 
-	subs r2,r2,#01 
-	BNE L 
-l 	B l
-end
-
------------------------------------------------------------------------------------------------------------
-
-// ax^2 + bx + c
-
-	AREA quadexp,CODE,READONLY ; ax^2 + bx + c
-	
-	LDR r0,=0x40000000
-	LDM r0,{r1-r4} ; r1,r2,r3,r4 -> x,a,b,c
-	MUL r5,r1,r1 ;
-	MUL r2,r5,r2 ;
-	MUL r1,r3,r1 ;
-	ADD r1,r1,r2 ;
-	ADD r1,r1,r4 ;
-	str r1,[r0,#0x10]
-l	b l
-	END
-
------------------------------------------------------------------------------------------------------------
-
-//b^2 - 4ac 
-
-	AREA rootexp,CODE,READONLY ; b^2 - 4ac 
-	LDR r0,=0x40000000 
-	LDM r0,{r1-r3}
-	MUL r4,r2,r2
-	LSL r1,#2
-	MUL r5,r1,r3
-	SUB r6,r4,r5
-	STR r6,[r0,#0x0c]
-l	b l
-	END
-
------------------------------------------------------------------------------------------------------------
-
-//Odd or Even
-	AREA EXP3,CODE,READONLY
-ENTRY
-	LDR r0,=0x40000000;
-	LDR r1,[r0],#0x04;
-	AND r2,r1,#0x01;
-	STR r2,[r0],#0x04;
-L	B L;
-	END;
-	
---------------------------------------------------------------------------------------------------------
-
-//64 bit addition
-
-	AREA EXP4,CODE,READONLY
-ENTRY
-	LDR r0,=0x40000000;
-	LDMIA r0!,{r1-r4};
-	ADDS r5,r2,r4;
-	ADC r6,r1,r3;
-	STMIA r0!,{r5,r6};
-L	B L;
-	END;
-
-
-------------------------------------------------------------------------------------------------------------//Fibonacci
-	AREA EXP9,CODE,READONLY
-ENTRY
-	LDR r0,=0x40000000;
-	LDR r1,[r0],#0x04;
-	MOV r4,#0x00;
-	MOV r5,#0x01;
-	STR r3,[r0],#0x04;
-	STR r4,[r0],#0x04;
-	SUB r2,r1,#0x02;
-LOOP	CMP r2,r3;
-		BEQ EXIT;
-		ADD r6,r4,r5;
-		MOV r4,r5;
-		MOV r5,r6;
-		STR r6,[r0],#0x04;
-		ADD r3,r3,#0x01;
-		B LOOP;
-EXIT	
-C	B C;
-	END;
-
-------------------------------------------------------------------------------------------------------------
-
-
-//Factorial
-
-	AREA factstack, CODE, READONLY 
-
-    LDR r0, =0x40000000
-    LDR r1, [r0]
-    MOV r2, #1
-    BL lpush          ; Call the function lpush
-    STR r2, [r0]
-l   B l
-
-lpush
-    SUB sp, sp, #8
-    STR lr, [sp, #4]
-    STR r1, [sp]
-    CMP r1, #1
-    BGT loop
-    B lpop
-
-loop
-    SUB r1, r1, #1
-    BL lpush          ; Call the function lpush recursively
-    B lpop
-
-lpop
-    LDR r1, [sp]
-    LDR lr, [sp, #4]
-    ADD sp, sp, #8
-    CMP r1, #0
-    MUL r2, r1, r2
-    MOV pc, lr
-
-    END
-
------------------------------------------------------------------------------------------------------------
-
-//Bubble Sort
-
-;Bubble Sort
-	AREA bubble,CODE,READONLY
-START
-	LDR R0,=0X40000000
-	LDR R1,[R0]
-OUTER
-	MOV R2,R1
-	LDR R0,=0X40000004
-INNER
-	LDR R4,[R0]
-	LDR R5,[R0,#04]!
-	CMP R4,R5
-	BLE CONTINUE
-	STR R4,[R0]
-	STR R5,[R0,#-0X04]
-CONTINUE
-	SUBS R2,R2,#01
-	BNE INNER
-l
-	B l
-	END
-
------------------------------------------------------------------------------------------------------------
-
-//Binary Search
-
-AREA add1, CODE, READONLY
-	ENTRY
-		LDR r0, =0x40000000
-		mov r13, #0x00
-		LDRB r1, [r0]        ; Load the number of elements
-		LDRB r2, [r0, #0x01] ; Load the search element
-		mov r3, #0x02        ; Initialize low index to 3rd index
-		add r4, r1, #0x01    ; Initialize high index to index of last element
-
-rep
-		cmp r3, r4
-		BGT exit
-		add r5, r3, r4       ; Calculate mid index
-		LSR r5, r5, #0x01    ; Divide by 2 (shift right)
-		LDRB r7, [r0, r5]    ; Load the value at the mid index
-		cmp r7, r2           ; Compare the value at mid index with the search value
-		BGT high             ; If value at mid index > search value, go to high branch
-
-low
-		add r3, r5, #0x01    ; Update low index to mid + 1
-		B rep                ; Repeat the loop
-
-high
-		sub r4, r5, #0x01    ; Update high index to mid - 1
-		B rep                ; Repeat the loop
-
-exit
-		mov r13, #0x11       ; Set a flag to indicate the value is found
-		B L                  ; Exit the loop
-
-L
-		b L
-		end
--------------------------------------------------------------------------------------------------------------------
-//Linear Search
-
-;Linear Search
-	AREA linear,CODE,READONLY
-START
-	LDR R0,=0X40000000
-	LDR R5,=0X40000050
-	MOV R6,#0XFF
-	LDR R1,[R0],#0X04
-	LDR R2,[R0],#0X04
-REP
-	LDR R3,[R0],#0X04
-	CMP R3,R1
-	BEQ FND
-	SUBS R2,R2,#01
-	BNE REP
-	B STOP
-FND	
-	MOV R6,#0X11
-STOP
-	STR R6,[R5]
-l
-	B l
-	END
-	
+%  %Filter implementation %LPF cutoff frequency 40Hz, Angular Frequency, f/(fs/2)=2*f/fs=0.0033
+ b=fir1(750,0.0033);%40Hz
+%   b=fir1(750,0.025,'high');%300Hz
+%   b=fir1(750,[0.01 0.05],'bandpass')%120-600Hz
+%  b=fir1(180,[0.01 0.05],'stop')%120-600Hz
+
+a=1;
+figure(2)
+freqz(b,a); 
+ 
+z=filter(b,a,x); %Filtering based on window (LPF)
+z1=fft(z,l2);
+z2=z1(1:l2/2);
+figure(1);
+subplot(3,1,3);
+plot(xaxis,abs(z2));
+title('After Filtering : Using LPF');
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+clc;
+clear all;
+close all;
+f=100;
+f1=50;
+f2=200;
+f3=150;
+fs=800;
+[b,a]=butter(20,2*pi*f,'s');
+%  [bz, az]=impinvar(b,a,fs);
+ [bz, az]=bilinear(b,a,fs);
+
+t=0:1/fs:1;
+x=sin(2*pi*f1*t)+sin(2*pi*f2*t)+sin(2*pi*f3*t);
+subplot(3,1,1);
+plot(t,x);
+l=length(t);
+l1=nextpow2(l);
+l2=2^l1;
+y=fft(x,l2);
+y1=y(1:l2/2);
+xaxis=linspace(0,fs,l2);
+xaxisnew=xaxis(1:l2/2);
+subplot(3,1,2);
+plot(xaxisnew,abs(y1));
+
+z = filter(bz,az,x);
+z1=fft(z,l2);
+z2=z1(1:l2/2);
+subplot(3,1,3);
+plot(xaxisnew,abs(z2))
+figure();
+freqz(bz,az)
+fvtool(b)
+
+freqs(b,a)
+--------------------------------------------------------------------------------------------------------------------------------------------
+clc;
+clear all;
+close all;
+wc=0.75;
+N=25;
+w=0:0.01:pi;
+%Hamming
+filter1=fir1(N,wc,hamming(N+1));
+freq_filter1=freqz(filter1,1,w);
+subplot(6,1,1);
+plot(w/pi,abs(freq_filter1));
+title('Hamming');
+grid on;
+hold on;
+
+%Hanning
+filter2=fir1(N,wc,hanning(N+1));
+freq_filter2=freqz(filter2,1,w);
+subplot(6,1,2);
+plot(w/pi,abs(freq_filter2));
+title('Hanning');
+grid on;
+hold on;
+
+%blackman
+filter3=fir1(N,wc,blackman(N+1));
+freq_filter3=freqz(filter3,1,w);
+subplot(6,1,3);
+plot(w/pi,abs(freq_filter3));
+title('blackman');
+grid on;
+hold on;
+
+%kaiser
+filter4=fir1(N,wc,kaiser(N+1));
+freq_filter4=freqz(filter4,1,w);
+subplot(6,1,4);
+plot(w/pi,abs(freq_filter4));
+title('kaiser');
+grid on;
+hold on;
+
+
+%Rectangular
+filter5=fir1(N,wc,boxcar(N+1));
+freq_filter5=freqz(filter5,1,w);
+subplot(6,1,5);
+plot(w/pi,abs(freq_filter5));
+title('Rectangular');
+grid on;
+hold on;
+
+
+
+%Bartlett
+filter6=fir1(N,wc,bartlett(N+1));
+freq_filter6=freqz(filter6,1,w);
+subplot(6,1,6);
+plot(w/pi,abs(freq_filter6));
+title('Bartlett');
+grid on;
+hold on;
+-----------------------------------------------------------------------------------------------------------------------------------------
+Exp No 7 :
+Date:
+Aim: To design IIR filter for the given specification and verify its performance using speech
+signal.
+Algorithm:
+1. Get the pass band edge frequency, stop band edge frequency, pass band
+attenuation and stop band attenuation.
+2. Determine the order of Butterworth filter /Chebyshev filter.
+3. Determine the numerator and denominator of the transfer function
+4. Determine the frequency response
+5. Analyze the performance of the filter using the speech signal.
+Instructions to be explored: 1. buttord, 2. butter 3. Cheby1ord 4. Cheby1 5.freqz
+Program:
+clc;
+clear all;
+close all;
+[y, fs] = audioread("audio_FIR.wav");
+l = length(y);
+t = (0:l-1)/fs;
+figure;
+subplot(2,1,1);
+plot(t, y);
+title('Original Audio Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+f = (-l/2:l/2-1)*(fs/l);
+subplot(2,1,2);
+plot(f, abs(fftshift(fft(y)))/l);
+title('Magnitude Spectrum of Original Audio Signal');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+fp = 2000;
+fst = 2500;
+wp = fp/(fs/2);
+wst = fst/(fs/2);
+rp = 1;
+rs = 80;
+%for butterworth
+[n, wc] = buttord(wp, wst, rp, rs);
+[b, a] = butter(n, wc, 'low');
+%for chebyshev1
+[n1, wc1] = cheb1ord(wp, wst, rp, rs);
+[b1, a1] = cheby1(n1,rp, wc1, 'low');
+figure;
+freqz(b, a);
+title('Frequency Response of the Designed Butterwoth Filter');
+figure;
+freqz(b1, a1);
+title('Frequency Response of the Designed Chebyshev1 Filter');
+figure;
+faudio = filter(b, a, y);
+subplot(2,1,1);
+plot(f, abs(fftshift(fft(faudio)))/l);
+title('Magnitude Spectrum of Filtered Audio Signal(Butterworth)');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+faudio1 = filter(b1, a1, y);
+subplot(2,1,2);
+plot(f, abs(fftshift(fft(faudio1)))/l);
+title('Magnitude Spectrum of Filtered Audio Signal(Chebyshev1)');
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+Sample Output:
+
+Result:
+Designed an IIR filter for given specifications and verified its performance using
+speechsignal.
+----------------------------------------------------------------------------------------------------------------------------------------
+Exp No: 6
+Date:5.9.24
+
+Aim: To design different types of FIR filter using windowing and analyse its
+characteristics for the analysis of speech signal.
+
+Algorithm:
+1. Obtain the pass band edge frequency, stop band edge frequency, stop band and
+pass band attenuation.
+2. Select the window type and fix the order of the filter
+3. Analyse the filter performance by giving the input signal and verifying the spectrum
+of the signal.
+4. Adjust the performance of the filter for the
+improvement.
+Program:
+clc;clear all;close all;
+wc=0.75;
+N=25;
+w=0:0.01:pi;
+%Hamming
+filter1=fir1(N,wc,hamming(N+1));
+freq__filter1=freqz(filter1,1,w);
+subplot(6,1,1);
+plot(w/pi,abs(freq__filter1));
+title('Hamming');
+grid on;
+hold on;
+
+%Hanning
+filter2=fir1(N,wc,hanning(N+1));
+freq__filter2=freqz(filter2,1,w);
+subplot(6,1,2);
+plot(w/pi,abs(freq__filter2));
+title('Hanning');
+grid on;
+hold on;
+
+%blackman 
+filter3=fir1(N,wc,blackman(N+1));
+freq__filter3=freqz(filter3,1,w);
+subplot(6,1,3);
+plot(w/pi,abs(freq__filter3));
+title('Blackman');
+grid on;
+hold on;
+%kaiser
+filter4=fir1(N,wc,kaiser(N+1));
+freq__filter4=freqz(filter4,1,w);
+subplot(6,1,4);
+plot(w/pi,abs(freq__filter4));
+title('Kaiser');
+grid on;
+hold on;
+
+%Rectangular
+filter5=fir1(N,wc,boxcar(N+1));
+freq__filter5=freqz(filter5,1,w);
+subplot(6,1,5);
+plot(w/pi,abs(freq__filter5));
+title('Rectangular');
+grid on;
+hold on;
+
+%barlett
+filter6 = fir1(N,wc,bartlett(N+1));
+freq_filter6 = freqz(filter6,1,w);
+subplot(6,1,6);
+plot(w/pi,abs(freq_filter6));
+title('barlett');
+grid on;
+hold on;
+
+--------------------------------------------------------------------------------------------------------------------------------
+Exp. No:   
+Date:  
+Aim:  
+To reduce the noise component present on one dimensional(sinusoidal) and two 
+dimensional signal (image signal) using linear and non-linear filters Algorithm:  
+(i) Noise reduction on one dimensional signal using moving average filter   
+Step 1: Generate the original one dimensional sinusoidal signal  
+Step 2: Add random noise in it and generate the noisy signal  
+Step 3: Define the window size of moving average filter.  
+Step 4: Pass the noisy signal to the moving average filter and obtain the noise free  
+signal as output.  
+Step 5: Plot the graphs.  
+(ii) Noise reduction on one dimensional signal using Gaussian filter  
+Step 1: Generate the random noise signal  
+Step 2: Define the Gaussian filter with Sigma value of 10  
+Step 3: Use filter and noisy signal  
+Step 4: Obtain the noise free signal  
+Step 5: Plot the graph For 
+2D(Image signal):  
+(i)Noise reduction on two dimensional signal using filters.   
+Step 1: Load the two dimensional signal using imread (.tif file) and plot the image.  
+Step 2: Add salt and pepper noise to it and plot it.  
+Step 5: Pass the noisy signal to the moving average filter and obtain the noise free  
+signal and plot it.  
+Step 4: Pass the noisy signal to the moving average filter and obtain the noise free  
+signal and plot it.  
+Step 5: Pass the noisy signal to the moving average filter and obtain the noise free  
+signal and plot it.  
+Program:  
+1. By Moving Average Filter clc; 
+clear all; close all;  
+t=0:0.11:20; x=sin(t); 
+plot(x); 
+n=randn(1,length(x))
+ ;  
+nx=n+x;  
+points=input('Enter the number of points in moving average filter'); 
+fil=ones(1,points);  
+Num=(1/points)*fil; Den=[1];  
+filterx=filter(Num,Den,nx);  
+figure; 
+plot(x,'b'); 
+hold on; 
+plot(nx,'g'); 
+hold on;  
+plot(filterx,'m','linewidth',1.5);  
+legend('Original Signal','Signal with noise','Filtered Signal')  
+Output:          
+2. By Gaussian Filter  
+clc;clear all;close all; 
+t=0:0.11:20; x=sin(t); 
+plot(x); 
+n=randn(1,length(x))
+ ; nx=n+x;  
+g=fspecial('gaussian',[1 100],12);  
+figure; plot(g); 
+y=filter(g,1,nx)
+ ; figure;  
+plot(x,'b'); hold on; 
+plot(nx,'g'); hold on; 
+plot(y,'m','linewidth',1.5);  
+legend('Original Signal','Signal with noise','Filtered Signal') Output:  
+ 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+For 2D(Image signal):  
+clc; clear all; close all; 
+I=imread('cameraman.tif'); 
+figure(); imshow(I);  
+title('image');  
+I1=imnoise(I,'salt & pepper',0.02);  
+figure(); imshow(I1); 
+title('salt&pepperimage'); 
+iavg=filter2(fspecial('average',3),I1)/255; 
+figure(); imshow(iavg);  
+title('moving avg filter'); 
+iguassian=filter2(fspecial('gaussian',3),I1)/255; 
+figure(); imshow(iguassian);  
+title('guassian filter'); imed=medfilt2(I1); 
+figure();  
+imshow(imed);  
+title('median filter');  
+ 
+Output:  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Result: To reduce the noise component present on One Dimensional (speech signal) and 
+Two Dimensional signals (image signal)using linear and non-linear filters.  
+
+----------------------------------------------------------------------------------------------------------------------
+EXP.NO: 8 
+Date: 
+Aim 
+(i)To Down sample and Up sample the speech signal by an integer factor 2 & 4 
+(ii) To analyze the process in Time and Frequency Domains 
+Algorithm 
+Step I : Define integer factor (D). 
+Step II : Read and play back the input data, sampled at Fs 
+Hz.Step III : Perform Down sampling by D. 
+Step IV: Plot the response in Time domain. 
+Step V : Use fft command and Plot the response in Frequency 
+domain.Step VI: Hear the sound using the Matlab command soundsc. 
+Step VII: Perform Up sampling by D. 
+Step VIII: Plot the response in Time domain. 
+Step IX : Use fft command and Plot the response in Frequency domain. 
+Step X :Hear the sound using the Matlab command soundsc. 
+Code: 
+%Upsampling 
+clc; 
+clear all; 
+close all; 
+f1 = 100; 
+f2 = 200; 
+f3 = 300; 
+f4 = 500; 
+Fs = 1500; 
+M = 2; % Upsampling factor 
+[x, Fs] = audioread('au.wav'); 
+t = 0:1/Fs:(length(x)*1/Fs)-1/Fs; 
+% Input signal plot 
+subplot(4,1,1); 
+plot(t, x); 
+title('Original Audio Signal'); 
+xlabel('Time (s)'); 
+ylabel('Amplitude'); 
+% FFT of the original signal 
+l = length(t); 
+l1 = nextpow2(l); 
+l2 = 2^l1; 
+y = fft(x, l2); 
+y1 = y(1:l2/2); 
+xaxis = linspace(0, Fs/2, l2/2); 
+subplot(4,1,2); 
+plot(xaxis, abs(y1)/length(y1)); 
+title('FFT of Original Audio Signal'); 
+xlabel('Frequency (Hz)'); 
+ylabel('Magnitude'); 
+% Upsampling without interpolation 
+yupsample = upsample(x, M); 
+Fs_upsample = Fs * M; 
+tupsample = 0:1/Fs:(M * length(x) * 1/Fs) - 1/Fs; 
+% Upsampled signal plot 
+subplot(4,1,3); 
+plot(tupsample, yupsample); 
+title('Upsampled Signal without Interpolation'); 
+xlabel('Time (s)'); 
+ylabel('Amplitude'); 
+% FFT of the upsampled signal 
+l = length(tupsample); 
+l1 = nextpow2(l); 
+l2 = 2^l1; 
+z = fft(yupsample, l2); 
+y1 = z(1:l2/2); 
+xaxis = linspace(0, Fs_upsample/2, l2/2); 
+subplot(4,1,4); 
+plot(xaxis, abs(y1)/length(y1)); 
+title('FFT of Upsampled Signal without Interpolation'); 
+xlabel('Frequency (Hz)'); 
+ylabel('Magnitude'); 
+% Upsampling with LPF (Interpolation) 
+Fs_upsample = Fs * M; 
+Fstop = Fs / 2; % LPF cutoff frequency 
+wstop = 2 * Fstop / Fs_upsample; % cutoff in radians 
+filterFIR = fir1(50, wstop); % Design FIR filter 
+% Apply interpolation filter 
+yfiltered = filter(filterFIR, 1, yupsample); 
+figure(2); 
+freqz(filterFIR); 
+title('Frequency Response of the Interpolation Filter'); 
+% Plot after interpolation 
+figure('Name', 'After Interpolating'); 
+subplot(2,1,1); 
+plot(tupsample, yfiltered); 
+title('Upsampled Signal with Interpolation'); 
+xlabel('Time (s)'); 
+ylabel('Amplitude'); 
+% FFT of the filtered signal 
+l = length(t); 
+l1 = nextpow2(l); 
+l2 = 2^l1; 
+z = fft(yfiltered, l2); 
+y1 = z(1:l2/2); 
+xaxis = linspace(0, Fs_upsample/2, l2/2); 
+subplot(2,1,2); 
+plot(xaxis, abs(y1)/length(tupsample)); 
+title('FFT of Upsampled Signal with Interpolation'); 
+xlabel('Frequency (Hz)'); 
+ylabel('Magnitude');  
+ 
+ 
+ 
+ 
+ 
+ Output when upsampling factor=4 
+ 
+ 
+  
+%downsampling 
+clc; 
+clear all; 
+close all; 
+% Parameters 
+f1 = 100; f2 = 200; f3 = 300; f4 = 500; 
+Fs = 1500;           
+M = 2;               
+% Original sampling frequency 
+% Downsampling factor 
+% Load the audio signal 
+[x, Fs] = audioread('au.wav'); 
+t = 0:1/Fs:(length(x)*1/Fs) - 1/Fs; % Time vector 
+% Plot the original audio signal 
+figure; 
+subplot(4,1,1); 
+plot(t, x); 
+title('Original Audio Signal'); 
+xlabel('Time (s)'); 
+ylabel('Amplitude'); 
+% FFT of the original signal 
+l = length(t); 
+l1 = nextpow2(l); 
+l2 = 2^l1; 
+y = fft(x, l2); 
+y1 = y(1:l2/2); 
+xaxis = linspace(0, Fs/2, l2/2); 
+subplot(4,1,2); 
+plot(xaxis, abs(y1)); 
+title('FFT of Original Audio Signal'); 
+xlabel('Frequency (Hz)'); 
+ylabel('Magnitude'); 
+%% Downsampling without Anti-Aliasing Filter 
+ydownsample = zeros(size(x)); 
+temp = downsample(x, M);  % Downsample the signal by factor M 
+ydownsample(1:length(temp)) = temp; 
+Fs_downsample = Fs / M;   % New sampling frequency 
+% Create a new time vector for the downsampled signal 
+t_downsample = 0:1/Fs_downsample:(length(temp)-1)/Fs_downsample; 
+% Plot the downsampled signal without anti-aliasing 
+subplot(4,1,3); 
+plot(t_downsample, temp); 
+title('Downsampled Signal (Without Anti-Aliasing Filter)'); 
+xlabel('Time (s)'); 
+ylabel('Amplitude'); 
+% FFT of the downsampled signal 
+l = length(t_downsample); 
+l1 = nextpow2(l); 
+l2 = 2^l1; 
+z = fft(temp, l2); 
+y1 = z(1:l2/2); 
+xaxis = linspace(0, Fs_downsample/2, l2/2); 
+subplot(4,1,4); 
+plot(xaxis, abs(y1)); 
+title('FFT of Downsampled Signal (Without Anti-Aliasing Filter)'); 
+xlabel('Frequency (Hz)'); 
+ylabel('Magnitude');% 
+% Downsampling with Anti-Aliasing Filter (LPF) 
+% Design an anti-aliasing FIR low-pass filter 
+Fstop = Fs / (2 * M);       
+% Stop frequency for LPF 
+wstop = 2 * Fstop / Fs;     % Normalized stop frequency 
+filterFIR = fir1(50, wstop); % Design a FIR filter with order 50 
+% Apply the anti-aliasing filter 
+yfiltered = filter(filterFIR, 1, x); 
+% Visualize filter response 
+figure; 
+freqz(filterFIR); 
+title('Frequency Response of the Anti-Aliasing Filter');% Downsample after filtering 
+ydownsample = downsample(yfiltered, M);% Create a new time vector for the filtered downsampled 
+signal 
+t_downsample_filtered = 0:1/Fs_downsample:(length(ydownsample)-1)/Fs_downsample;% Plot the 
+downsampled signal after applying the anti-aliasing filter 
+figure('Name', 'After Anti-Aliasing'); 
+subplot(2,1,1); 
+plot(t_downsample_filtered, ydownsample); 
+title('Downsampled Signal (With Anti-Aliasing Filter)'); 
+xlabel('Time (s)'); 
+ylabel('Amplitude'); 
+% FFT of the downsampled signal with anti-aliasing filter 
+l = length(t_downsample_filtered); 
+l1 = nextpow2(l); 
+l2 = 2^l1; 
+z = fft(ydownsample, l2); 
+y1 = z(1:l2/2); 
+xaxis = linspace(0, Fs_downsample/2, l2/2); 
+subplot(2,1,2); 
+plot(xaxis, abs(y1)); 
+title('FFT of Downsampled Signal (With Anti-Aliasing Filter)'); 
+xlabel('Frequency (Hz)'); 
+ylabel('Magnitude'); 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+%with downsampling factor  4
+ 
+ 
+ 
+ 
+ 
+Result: The Up-sampling and Down-sampling of the signal is done by a factor of 2 and 4, 
+characteristics of signal is analysed in time and frequency domain.
+------------------------------------------------------------------------------------------------------------------------------------
+
+Ex.No:1  
+Date:  
+AIM: 
+To write a Matlab code for acquisition of one and two dimensional signals .  
+Case 1:  
+Generation of sinusoidal signal  
+ALGORITHM:  
+1. Assign suitable sampling frequency and end time of signal  
+2. Generate the continuous sinusoidal signal  
+3. Plot the one dimensional sinusoidal signal 
+PROGRAM: 
+Amp = 2; 
+f = 50; 
+Ph = 0; 
+Fs = 2000; 
+t = 0:1/Fs:10/f; 
+x = Amp*sin(2*pi*f*t + Ph); 
+figure(1) 
+plot(t,x) 
+xlabel('Amplitude') 
+ylabel('Time') 
+title('Sine Signal') 
+SAMPLE OUTPUTS:  
+Case 2:  
+Generation of discrete signal  
+ALGORITHM:  
+1. Assign suitable length of discrete signal  
+2. Generate the discrete sinusoidal signal  
+3. Plot the one dimensional discrete sinusoidal signal 
+PROGRAM: 
+Amp = 2; 
+f = 50; 
+Ph = 0; 
+Fs = 2000; 
+t = 0:1/Fs:1/f; 
+x = Amp*sin(2*pi*f*t + Ph); 
+figure(1) 
+stem(t,x) 
+xlabel('Amplitude') 
+ylabel('Time') 
+title('Sine Signal') 
+SAMPLE OUTPUTS: 
+Case 3:  
+Live recording of speech signal using headset (audiorecorder function) ALGORITHM:  
+1. Assign suitable sampling frequency, number of channel and bits  
+2. Record the live speech using audiorecorder function  
+3. Play the Plot the recorded speech signal 
+PROGRAM: 
+clc; 
+clear all; 
+close all; 
+[y,fs] = audioread('audiosignal.wav'); 
+t = 0:1/fs:[length(y)*1/fs]-1/fs; 
+sound(y,fs); 
+plot(t,y); 
+xlabel('Seconds'); 
+ylabel('Amplitude'); 
+title('Audio Signal'); 
+SAMPLE OUTPUTS: 
+Case 4:  
+Acquisition of two dimensional (image):   
+ALGORITHM:  
+1. Acquire 2D signal (image) using imread function 
+2. Plot the image  
+3. Apply DCT for the above image and plot the result  
+4. Apply IDCT, recover the original image 
+PROGRAM: 
+clc; 
+clear all; 
+close all; 
+a = imread('cameraman.tif'); 
+[M N] = size(a); 
+figure; 
+subplot(1,3,1); 
+imshow(a); 
+b = dct2(a);%Discrete Cosine Transform 
+subplot(1,3,2); 
+imshow(abs(b),[]); 
+e = idct2(b); 
+subplot(1,3,3); 
+imshow(e,[]); 
+SAMPLE OUTPUTS: 
+RESULT: 
+Hence, a Matlab code for acquisistion of one and two dimensional signals has been 
+written. 
+Ex.No:2  
+Date:  
+AIM: 
+To write a Matlab code for shifting and scaling of one dimensional signal and analyze 
+the process in both time and frequency domains.  
+Case 1:  
+ALGORITHM:  
+1. Generate the one dimensional signal  
+2. Plot the generated original signal  
+3. Right shift the generated signal with 5 sec plot the graph  
+4. Left shift the generated signal with 5 sec plot the graph  
+PROGRAM: 
+clc; 
+clear all; 
+close all; 
+Amp = 2; 
+f = 50; 
+Ph = 0; 
+Fs = 2000; 
+t = 0:1/Fs:3/f; 
+x = Amp*sin(2*pi*f*t + Ph); 
+figure(1); 
+subplot(3,1,1) 
+plot(t,x) 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Original Signal') 
+subplot(3,1,2) 
+plot(t+5,x) 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Right Shifted Signal') 
+subplot(3,1,3) 
+plot(t-5,x) 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Left Shifted Signal') 
+SAMPLE OUTPUTS: 
+ 
+ 
+Case 2: Time shifting of a signal ( Recorded speech signal)  
+ALGORITHM:  
+1. Read the recorded one dimensional speech signal using audioread function  
+2. Plot the speech signal  
+3. Right shift the speech signal with 5 sec plot the graph  
+4. Left shift the speech signal with 5 sec plot the graph  
+ 
+PROGRAM: 
+clc; 
+clear all; 
+close all; 
+[y,fs] = audioread('audiosignal.wav'); 
+t = 0:1/fs:[length(y)*1/fs]-1/fs; 
+sound(y,fs); 
+figure(1); 
+subplot(3,1,1) 
+plot(t,y) 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Original Signal') 
+subplot(3,1,2) 
+plot(t+5,y) 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Right Shifted Signal') 
+subplot(3,1,3) 
+plot(t-5,y) 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Left Shifted Signal') 
+SAMPLE OUTPUTS: 
+Case 3: Time Scaling of a signal with time and frequency domain analysis 
+ALGORITHM: 
+1. Generate two continuous signal with different amplitude and frequency                        
+(X = 0.7sin(2*pi*f*t), and Y= 2sin(2*pi*(2f)*t). Assume F=50Hz and Fs=1000.  
+2. Plot the time domain for two signals  
+3. Apply FFT for both the signals  
+4. Convert the double sided spectrum in to single sided spectrum  
+5. Plot the frequency domain for both the signals 
+PROGRAM: 
+clc;  
+clear all;  
+close all;  
+Amp = 2;  
+f = 50;  
+Ph = 0;  
+Fs = 2000;  
+t = 0:1/Fs:2/f;  
+L = length(t); 
+x = Amp*sin(2*pi*f*t + Ph);  
+x_comp = Amp*sin(2*pi*f*(2*t) + Ph);  
+figure(1);  
+subplot(3,2,1)  
+plot(t,x)  
+xlabel('Time')  
+ylabel('Amplitude')  
+title('Original Signal')  
+subplot(3,2,2)  
+plot(t,x_comp)  
+xlabel('Time')  
+ylabel('Amplitude')  
+title('Compressed Signal')  
+subplot(3,2,3)  
+y = fftshift(fft(x)); 
+fshift = (-(L+1)/2+1:(L)/2)*(Fs/L); 
+Y = abs(y/L); 
+plot(fshift(1:end),Y(1:end))  
+xlabel('Frequency')  
+ylabel('Amplitude')  
+title('Original Signal-Frequency Spectrum') 
+subplot(3,2,4) 
+n = length(x_comp); 
+y = fftshift(fft(x_comp)); 
+fshift = (-(L+1)/2+1:(L)/2)*(Fs/L); 
+Y = abs(y/L); 
+plot(fshift(1:end),Y(1:end))  
+xlabel('Frequency')  
+ylabel('Amplitude')  
+title('Compressed Signal-Frequency Spectrum') 
+subplot(3,2,5) 
+Y=(fft(x)); 
+P2=abs(Y/L); 
+P1=2*P2(1:(L/2+1)); 
+f=(0:L/2)*(Fs/L); 
+plot(f,P1); 
+xlabel('Frequency')  
+ylabel('Amplitude')  
+title('Original Signal-Frequency Spectrum (SS)') 
+subplot(3,2,6) 
+Y=(fft(x_comp)); 
+P2=abs(Y/L); 
+P1=2*P2(1:(L/2+1)); 
+f=(0:L/2)*(Fs/L); 
+plot(f,P1); 
+xlabel('Frequency')  
+ylabel('Amplitude')  
+title('Compressed Signal-Frequency Spectrum (SS)') 
+SAMPLE OUTPUTS : 
+RESULT: 
+Hence , a Matlab code for shifting and scaling of one dimensional signal has been written 
+and the process in both time and frequency domains has been analyzed. 
+Ex.No:4 
+Date: 
+AIM: 
+To write a Matlab code for approximation of periodic signals using Fourier series. 
+ALGORITHM: 
+1. Generate the continuous signal  
+2. Manipulate the i/p signal by using N-harmonic Fourier series  
+X(t) = a0 + a1 cos(ω0t + θ1) + a2 cos(2ω0t + θ2) +.....+ aN cos(Nω0t + θN)  
+3. Analyse the above process and plot the signal 
+PROGRAM: 
+clc; 
+clear all; 
+close all; 
+Fs = 1000; 
+f = 0.3; 
+T = 1/f; 
+cycle = 5; 
+t = 0:1/Fs:cycle/f; 
+n= length(t); 
+Amp = 2; 
+x1 = Amp*sawtooth(2*pi*f*t); 
+x2 = Amp*sawtooth(2*pi*f*t,1/2); 
+x3 = Amp*square(2*pi*f*t); 
+%Sawtooth 
+figure(1) 
+subplot(2,1,1) 
+plot(t,x1); 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Sawtooth waveform') 
+A0 = sum(x1.*ones(size(x1)))*(1/T); 
+fFs = A0; 
+for k = 1:50 
+A(k) = sum(x1.*cos(2*pi*k*t/T))*(2/T); 
+B(k) = sum(x1.*sin(2*pi*k*t/T))*(2/T); 
+fFs = fFs + A(k).*cos(2*pi*k*t/T) + B(k).*sin(2*pi*k*t/T); 
+end 
+subplot(2,1,2) 
+plot(t,fFs); 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Approximation of sawtooth waveform using fourier series') 
+%Triangular Wave 
+figure(2); 
+subplot(2,1,1) 
+plot(t,x2); 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Sawtooth waveform') 
+A0 = sum(x2.*ones(size(x2)))*(1/T); 
+fFs = A0; 
+for k = 1:50 
+A(k) = sum(x2.*cos(2*pi*k*t/T))*(2/T); 
+B(k) = sum(x2.*sin(2*pi*k*t/T))*(2/T); 
+fFs = fFs + A(k).*cos(2*pi*k*t/T) + B(k).*sin(2*pi*k*t/T); 
+end 
+subplot(2,1,2) 
+plot(t,fFs); 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Approximation of triangular waveform using fourier series') 
+%Square Wave 
+figure(3); 
+subplot(2,1,1) 
+plot(t,x3); 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Sawtooth waveform') 
+A0 = sum(x3.*ones(size(x3)))*(1/T); 
+fFs = A0; 
+for k = 1:50 
+A(k) = sum(x3.*cos(2*pi*k*t/T))*(2/T); 
+B(k) = sum(x3.*sin(2*pi*k*t/T))*(2/T); 
+fFs = fFs + A(k).*cos(2*pi*k*t/T) + B(k).*sin(2*pi*k*t/T); 
+end 
+subplot(2,1,2) 
+plot(t,fFs); 
+xlabel('Time') 
+ylabel('Amplitude') 
+title('Approximation of triangular waveform using fourier series') 
+SAMPLE OUTPUTS: 
+
+
+ 
+RESULT: 
+Hence, a Matlab code for approximation of periodic signals using Fourier series has been 
+written. 
+Ex.No:5  
+Date: 
+AIM: 
+To write a Matlab code for approximation of rectangular and triangular sequences using 
+Fourier transform. 
+ALGORITHM: 
+1. Generate the rectangular / triangular sequence by getting width and height  
+2. Manipulate the i/p signal by using inverse Fourier transform  
+3. Analyse the process in time and frequency domain and plot both the signals 
+PROGRAM: 
+%Triangular sequence: 
+clc; 
+clear all; 
+close all; 
+x = 6; 
+N = 100; 
+l = -x/2 : x/2; 
+u = tripuls(l,x); 
+dtftU = 0; 
+k = -N:N-1;     
+for n = 0:x 
+dtftU = dtftU + u'.*exp(-1i*(2*pi/N)*(k*n)); 
+end; 
+w = 2*pi*k/N; 
+figure(1); 
+subplot(2,2,1); 
+stem(l,u); 
+xlabel('Time'); 
+ylabel('Amplitude'); 
+title('Signal'); 
+subplot(2,2,2); 
+plot(w, abs(dtftU)); 
+xlabel('Frequency'); 
+ylabel('Amplitude'); 
+title('Magnitude Response'); 
+subplot(2,2,3); 
+plot(w, angle(dtftU)); 
+xlabel('Frequency'); 
+ylabel('Amplitude'); 
+title('Phase Response'); 
+idtftU = 0; 
+for k=0:length(dtftU)-1; 
+idtftU = idtftU + (1/N)*dtftU.*exp(1i*(2*pi/N).*(k*n)); 
+end 
+subplot(2,2,4); 
+stem(l,idtftU); 
+xlabel('Time'); 
+ylabel('Amplitude'); 
+title('Reconstructed Signal'); 
+%Rectangular Sequence: 
+clc; 
+clear all; 
+close all; 
+x = 6; 
+N = 100; 
+l = -x/2 : x/2; 
+u = rectpuls(l,x+1); 
+dtftU = 0; 
+k = -N:N-1; 
+for n = 0:x 
+dtftU = dtftU + u'.*exp(-1i*(2*pi/N)*(k*n)); 
+end; 
+w = 2*pi*k/N; 
+figure(1); 
+subplot(2,2,1); 
+stem(l,u); 
+xlabel('Time'); 
+ylabel('Amplitude'); 
+title('Signal'); 
+subplot(2,2,2); 
+plot(w, abs(dtftU)); 
+xlabel('Frequency'); 
+ylabel('Amplitude'); 
+title('Magnitude Response'); 
+subplot(2,2,3); 
+plot(w, angle(dtftU)); 
+xlabel('Frequency'); 
+ylabel('Amplitude'); 
+title('Phase Response'); 
+idtftU = 0; 
+for k=0:length(dtftU)-1; 
+idtftU = idtftU + (1/N)*dtftU.*exp(1i*(2*pi/N).*(k*n)); 
+end 
+subplot(2,2,4); 
+stem(l,idtftU); 
+xlabel('Time'); 
+ylabel('Amplitude'); 
+title('Reconstructed Signal'); 
+ 
+SAMPLE OUTPUTS: 
+ 
+ 
+ 
+RESULT: 
+ 
+Hence, a Matlab code for approximation of rectangular and triangular sequences 
+using Fourier transform has been written.
+---------------------------------------------------------------------------------------------------------------------------
