@@ -83,7 +83,136 @@ print("\nFOLLOW sets:")
 for non_terminal in grammar:
     print(f"FOLLOW({non_terminal}) = {follow_sets[non_terminal]}")
 ----------------------------------------------------------------------------------------------------------------------------------------
+from collections import defaultdict
 
+def compute_first(grammar):
+    first = defaultdict(set)
+
+    def first_of(symbol, visited=set()):
+        if symbol in first:
+            return first[symbol]
+
+        if not symbol.isupper():  # Terminal
+            return {symbol}
+
+        if symbol in visited:
+            return set()
+
+        visited.add(symbol)
+
+        for production in grammar[symbol]:
+            for char in production:
+                char_first = first_of(char, visited.copy())
+                first[symbol].update(char_first - {'ε'})
+
+                if 'ε' not in char_first:
+                    break
+            else:
+                first[symbol].add('ε')
+
+        return first[symbol]
+
+    for non_terminal in grammar:
+        first_of(non_terminal)
+
+    return first
+
+def compute_follow(grammar, start_symbol, first):
+    follow = defaultdict(set)
+    follow[start_symbol].add('$')
+
+    changed = True
+    while changed:
+        changed = False
+        for lhs, productions in grammar.items():
+            for production in productions:
+                trailer = follow[lhs].copy()
+
+                for i in range(len(production) - 1, -1, -1):
+                    symbol = production[i]
+
+                    if symbol.isupper():
+                        if not follow[symbol].issuperset(trailer):
+                            follow[symbol].update(trailer)
+                            changed = True
+
+                        if 'ε' in first[symbol]:
+                            trailer.update(first[symbol] - {'ε'})
+                        else:
+                            trailer = first[symbol]
+                    else:
+                        trailer = {symbol}
+
+    return follow
+
+def construct_ll1_table(grammar, first, follow):
+    table = defaultdict(dict)
+
+    for lhs, productions in grammar.items():
+        for production in productions:
+            first_set = set()
+            
+            for symbol in production:
+                first_set.update(first[symbol] - {'ε'})
+                if 'ε' not in first[symbol]:
+                    break
+            else:
+                first_set.add('ε')
+
+            for terminal in first_set - {'ε'}:
+                table[lhs][terminal] = production
+
+            if 'ε' in first_set:
+                for terminal in follow[lhs]:
+                    table[lhs][terminal] = production
+
+    return table
+
+def print_ll1_table(table):
+    terminals = sorted({t for row in table.values() for t in row.keys()})
+    header = ["Non-Terminal"] + terminals
+    print(f"{header[0]:<15} {' | '.join(f'{h:<10}' for h in header[1:])}")
+    print("=" * (15 + 12 * len(terminals)))
+
+    for non_terminal, row in table.items():
+        row_str = [row.get(t, "") for t in terminals]
+        print(f"{non_terminal:<15} {' | '.join(f'{r:<10}' for r in row_str)}")
+
+def get_user_input():
+    grammar = {}
+    print("Enter the grammar productions (one per line). Use 'ε' for epsilon. Enter a blank line to finish.")
+    while True:
+        line = input().strip()
+        if not line:
+            break
+        lhs, rhs = line.split('->')
+        lhs = lhs.strip()
+        rhs = [prod.strip() for prod in rhs.split('|')]
+        grammar[lhs] = rhs
+    
+    start_symbol = input("Enter the start symbol: ").strip()
+    return grammar, start_symbol
+
+# Get user input
+grammar, start_symbol = get_user_input()
+
+# Compute FIRST, FOLLOW, and LL(1) table
+first_sets = compute_first(grammar)
+follow_sets = compute_follow(grammar, start_symbol, first_sets)
+ll1_table = construct_ll1_table(grammar, first_sets, follow_sets)
+
+# Display Results
+print("\nFIRST sets:")
+for nt, fset in first_sets.items():
+    print(f"FIRST({nt}) = {fset}")
+
+print("\nFOLLOW sets:")
+for nt, fset in follow_sets.items():
+    print(f"FOLLOW({nt}) = {fset}")
+
+print("\nLL(1) Parsing Table:")
+print_ll1_table(ll1_table)
+----------------------------------------------------------------------------------------------------------------------
 
 from collections import defaultdict
 
