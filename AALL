@@ -1,2323 +1,567 @@
-SocketServer.java
-------------------
-import java.net.*;  
-import java.io.*;  
-class SocketServer{  
-  public static void main(String args[])throws Exception{  
-    ServerSocket ss=new ServerSocket(3333);  
-    Socket s=ss.accept();  
-    DataInputStream din=new DataInputStream(s.getInputStream());  
-    DataOutputStream dout=new DataOutputStream(s.getOutputStream());  
-    BufferedReader br=new BufferedReader(new InputStreamReader(System.in));  
-      
-    String str="",str2="";  
-    while(!str.equals("stop")){  
-    str=din.readUTF();  
-    System.out.println("client says: "+str);  
-    str2=br.readLine();  
-    dout.writeUTF(str2);  
-    dout.flush();  
-  }  
-  din.close();  
-  s.close();  
-  ss.close();  
-  }
-}
+from collections import defaultdict
 
-SocketClient.java
------------------
-import java.net.*;  
-import java.io.*;  
-class SocketClient{  
-public static void main(String args[])throws Exception{  
-Socket s=new Socket("localhost",3333);  
-DataInputStream din=new DataInputStream(s.getInputStream());  
-DataOutputStream dout=new DataOutputStream(s.getOutputStream());  
-BufferedReader br=new BufferedReader(new InputStreamReader(System.in));  
-  
-String str="",str2="";  
-while(!str.equals("stop")){  
-str=br.readLine();  
-dout.writeUTF(str);  
-dout.flush();  
-str2=din.readUTF();  
-System.out.println("Server says: "+str2);  
-}  
-  
-dout.close();  
-s.close();  
-}} 
+def compute_first(grammar):
+    first = defaultdict(set)
 
---------------------------------------------------------------------------------------------------------
-
-Server.java
-----------
-public class Server 
-{
+    def first_of(symbol):
+        if symbol in first:
+            return first[symbol]
         
-	public static void main(String[] args) 
-	{
-		chat___server myServer=new chat___server();
-                	myServer.startServer();
-	}
-}
+        if not symbol.isupper():
+            return {symbol}
 
-Client.java
-------------
-public class Client 
-{
-
-    public static void main(String[] args) 
-    {
-        chat_client client=new chat_client("127.0.0.1");
-        client.startRunning();
-    }
-}
-
-chat___server.java
--------------
-
-import java.io.*;
-import java.net.*;
-import javax.swing.*;
-
-public class chat_server extends JFrame {
-	
-	private ObjectOutputStream output;
-	private ObjectInputStream Input;
-	private Socket connection;
-	private ServerSocket server;
-	private int port = 4567;
-	
-	private JTextArea ca;
-	private JTextField msg;
-	private JButton Button;
-	private JLabel status;
-	private JLabel connectionLabel;
-	
-	public chat_server(){
-		setupGUI();
-	}
-	
-	private void setupGUI(){
-		setTitle("CHAT SERVER");
-		setSize(400, 300);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setLayout(null);
-		
-		ca = new JTextArea();
-		ca.setEditable(false);
-		JScrollPane chatScroll = new JScrollPane(ca);
-		chatScroll.setBounds(10,10,360,150);
-		add(chatScroll);
-		
-		msg = new JTextField();
-		msg.setBounds(10,170,260,30);
-		add(msg);
-		
-		Button = new JButton("Send");
-		Button.setBounds(280,170,90,30);
-		add(Button);
-		
-		status = new JLabel("Waiting for Client...");
-		status.setBounds(10,210,200,20);
-		add(status);
-		
-		connectionLabel = new JLabel("Not Connected");
-		connectionLabel.setBounds(10,240,300,20);
-		add(connectionLabel);
-		setVisible(true);
-	}
-		
-		/*Button.addActionListener(e -> {
-			sendMessage(msg.getText());
-			msg.setText("");
-		});
-		
-		setVisible(true);
-		}
-	public void startRunning(){
-		try{
-			server = new ServerSocket(port,50);
-			while(true){
-				try{
-					status.setText("Waiting for Client...");
-					connection = server.accept();
-					status.setText("Connected");
-					
-					connectionLabel.setText("Connected to "+ connection.getInetAddress().getHostAddress());
-					
-					output = new ObjectOutputStream(connection.getOutputStream());
-					output.flush();
-					Input = new ObjectInputStream(connection.getInputStream());
-					whileChatting();
-				} catch (Exception e){
-					ca.append("Connection ended\n");
-				}
-			}
-		} catch(Exception e){
-			ca.append("Error Starting Server\n");
-		}
-	}
-	private void whileChatting() throws IOException{
-		String message = "";
-        try {
-            while ((message = (String) Input.readObject()) != null) {
-                ca.append("\t\tClient: " + message + "\n");
-            }
-        } catch (ClassNotFoundException e) {
-            ca.append("Error receiving message\n");
-        }
-
-	}
-	private void sendMessage(String message){
-		  try {
-            ca.append("Server: " + message + "\n");
-            output.writeObject(message);
-            output.flush();
-        } catch (IOException e) {
-            ca.append("Message failed to send\n");
-        }
-
-	}*/
-	public static void main(String args[]){
-		//chat_server server = new chat_server();
-		//server.startRunning();
-		new chat_server();
-	}
-}
-
-
-chat_client.java
------------
-import java.io.*;
-import java.net.*;
-import javax.swing.*;
-
-public class chat_client extends JFrame {
-
-    private ObjectOutputStream output;
-    private ObjectInputStream input;
-    private Socket connection;
-    private String serverIP;
-    private int port = 4567;
-    
-    private JTextArea chatArea;
-    private JTextField messageField;
-    private JButton sendButton;
-    private JLabel status;
-    private JLabel connectionLabel;  // Added label to show IP address of connected server
-
-    public chat_client(String host) {
-        serverIP = host;
-        setupGUI();
-    }
-
-    private void setupGUI() {
-        setTitle("CHAT CLIENT");
-        setSize(400, 300);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(null);
-
-        chatArea = new JTextArea();
-        chatArea.setEditable(false);
-        JScrollPane chatScroll = new JScrollPane(chatArea);
-        chatScroll.setBounds(10, 10, 360, 150);
-        add(chatScroll);
-
-        messageField = new JTextField();
-        messageField.setBounds(10, 170, 260, 30);
-        add(messageField);
-
-        sendButton = new JButton("Send");
-        sendButton.setBounds(280, 170, 90, 30);
-        add(sendButton);
-
-        status = new JLabel("Disconnected");
-        status.setBounds(10, 210, 200, 20);
-        add(status);
-
-        connectionLabel = new JLabel("Not connected");  // New label to show connection status
-        connectionLabel.setBounds(10, 240, 300, 20);
-        add(connectionLabel);
-
-        sendButton.addActionListener(e -> {
-            sendMessage(messageField.getText());
-            messageField.setText("");
-        });
-
-        setVisible(true);
-    }
-
-    public void startRunning() {
-        try {
-            connectToServer();
-            setupStreams();
-            whileChatting();
-        } catch (EOFException eofException) {
-            chatArea.append("Connection ended by server\n");
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-        }
-    }
-
-    private void connectToServer() throws IOException {
-        status.setText("Attempting connection...");
-        connection = new Socket(InetAddress.getByName(serverIP), port);
-        status.setText("Connected");
+        for production in grammar[symbol]:
+            for char in production.split():
+                char_first = first_of(char)
+                first[symbol].update(char_first - {'epsilon'})
+                
+                if 'epsilon' not in char_first:
+                    break
+            else:
+                first[symbol].add('epsilon')
         
-        // Display the server's IP address once connected
-        connectionLabel.setText("Connected to server: " + connection.getInetAddress().getHostAddress());
-    }
+        return first[symbol]
 
-    private void setupStreams() throws IOException {
-        output = new ObjectOutputStream(connection.getOutputStream());
-        output.flush();
-        input = new ObjectInputStream(connection.getInputStream());
-    }
-
-    private void whileChatting() throws IOException {
-        String message = "";
-        try {
-            messageField.setEditable(true);
-            while ((message = (String) input.readObject()) != null) {
-                chatArea.append("\t\tServer: " + message + "\n");
-            }
-        } catch (ClassNotFoundException classNotFoundException) {
-            chatArea.append("Unknown message received\n");
-        }
-    }
-
-    private void sendMessage(String message) {
-        try {
-            chatArea.append("Client: " + message + "\n");
-            output.writeObject(message);
-            output.flush();
-        } catch (IOException ioException) {
-            chatArea.append("Failed to send message\n");
-        }
-    }
-
-    public static void main(String[] args) {
-        chat_client client = new chat_client("127.0.0.1");  // Replace with actual server IP if needed
-        client.startRunning();
-    }
-}
-
---------------------------------------------------------------------------------------------------------------------
-
-TCPClient.java
---------------
-// ref: https://github.com/mansimarkaur/TCP-file-transfer
-
-import java.io.*;
-import java.net.*;
-import java.lang.*;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import java.util.Arrays;
-
-class TCPClient extends JFrame implements ActionListener, MouseListener {
-	JPanel panel;
-	JLabel title, subT, msg, error, servFiles;
-	Font font,labelfont;
-	JTextField txt;
-	JButton up, down;
-	String dirName;
-	Socket clientSocket;
-	InputStream inFromServer;
-	OutputStream outToServer;
-	BufferedInputStream bis;
-	PrintWriter pw;
-	String name, file, path;
-	String hostAddr;
-	int portNumber;
-	int c;
-	int size = 9022386;
-	JList<String> filelist;
-	String[] names = new String[10000];
-	int len; // number of files on the server retrieved
-
-	public TCPClient(String dir, String host, int port) {
-		super("TCP CLIENT");
-
-		// set dirName to the one that's entered by the user
-		dirName = dir;
-
-		// set hostAddr to the one that's passed by the user
-		hostAddr = host;
-
-		// set portNumber to the one that's passed by the user
-		portNumber = port;
-
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		panel = new JPanel(null);
-
-		font = new Font("Roboto", Font.BOLD, 60);
-		title = new JLabel("TCP CLIENT");
-		title.setFont(font);
-		title.setBounds(300, 50, 400, 50);
-		panel.add(title);
-
-		labelfont = new Font("Roboto", Font.PLAIN, 20);
-		subT = new JLabel("Enter File Name :");
-		subT.setFont(labelfont);
-		subT.setBounds(100, 450, 200, 50);
-		panel.add(subT);
-
-		txt = new JTextField();
-		txt.setBounds(400, 450, 500, 50);
-		panel.add(txt);
-
-		up = new JButton("Upload");
-		up.setBounds(250, 550, 200, 50);
-		panel.add(up);
-
-		down = new JButton("Download");
-		down.setBounds(550, 550, 200, 50);
-		panel.add(down);
-
-		error = new JLabel("");
-		error.setFont(labelfont);
-		error.setBounds(200, 650, 600, 50);
-		panel.add(error);
-
-		up.addActionListener(this);
-		down.addActionListener(this);
-
-		try {
-			clientSocket = new Socket(hostAddr, portNumber);
-			inFromServer = clientSocket.getInputStream();
-			pw = new PrintWriter(clientSocket.getOutputStream(), true);
-			outToServer = clientSocket.getOutputStream();
-			ObjectInputStream oin = new ObjectInputStream(inFromServer);
-			String s = (String) oin.readObject();
-			System.out.println(s);
-
-			len = Integer.parseInt((String) oin.readObject());
-			System.out.println(len);
-
-			String[] temp_names = new String[len];
-
-			for(int i = 0; i < len; i++) {
-				String filename = (String) oin.readObject();
-				System.out.println(filename);
-				names[i] = filename;
-				temp_names[i] = filename;
-			}
-
-			// sort the array of strings that's going to get displayed in the scrollpane
-			Arrays.sort(temp_names);
-
-			servFiles = new JLabel("Files in the Server Directory :");
-			servFiles.setBounds(350, 125, 400, 50);
-			panel.add(servFiles);
-
-			filelist = new JList<>(temp_names);
-			JScrollPane scroll = new JScrollPane(filelist);
-			scroll.setBounds(300, 200, 400, 200);
-
-			panel.add(scroll);
-			filelist.addMouseListener(this);
-
-		} 
-		catch (Exception exc) {
-			
-			System.out.println("Exception: " + exc.getMessage());
-			error.setText("Exception:" + exc.getMessage());
-			error.setBounds(300,125,600,50);
-			panel.revalidate();
-		}
-
-		getContentPane().add(panel);
-	}
-
-    public void mouseClicked(MouseEvent click) {
-        if (click.getClickCount() == 2) {
-           String selectedItem = (String) filelist.getSelectedValue();
-           txt.setText(selectedItem);
-           panel.revalidate();
-         }
-    }
-
-    public void mousePressed(MouseEvent e){}
-    public void mouseEntered(MouseEvent e){}
-    public void mouseExited(MouseEvent e){}
-    public void mouseReleased(MouseEvent e){}
-
-	public void actionPerformed(ActionEvent event) {
-		if (event.getSource() == up) {
-			try {
-				name = txt.getText();
-
-				FileInputStream file = null;
-				BufferedInputStream bis = null;
-
-				boolean fileExists = true;
-				path = dirName + name;
-
-				try {
-					file = new FileInputStream(path);
-					bis = new BufferedInputStream(file);
-				} catch (FileNotFoundException excep) {
-					fileExists = false;
-					System.out.println("FileNotFoundException:" + excep.getMessage());
-					error.setText("FileNotFoundException:" + excep.getMessage());
-					panel.revalidate();
-				}
-
-				if (fileExists) {
-					// send file name to server
-					pw.println(name);
-
-					System.out.println("Upload begins");
-					error.setText("Upload begins");
-					panel.revalidate();
-
-					// send file data to server
-					sendBytes(bis, outToServer);
-					System.out.println("Completed");
-					error.setText("Completed");
-					panel.revalidate();
-
-					boolean exists = false;
-					for(int i = 0; i < len; i++){
-						if(names[i].equals(name)){
-							exists = true;
-							break;
-						}
-					}
-
-					if(!exists){
-						names[len] = name;
-						len++;
-					}
-
-					String[] temp_names = new String[len];
-					for(int i = 0; i < len; i++){
-						temp_names[i] = names[i];
-					}
-
-					// sort the array of strings that's going to get displayed in the scrollpane
-					Arrays.sort(temp_names);
-
-					// update the contents of the list in scroll pane
-					filelist.setListData(temp_names);
-
-					// close all file buffers
-					bis.close();
-					file.close();
-					outToServer.close();
-				}
-			} 
-			catch (Exception exc) {
-				System.out.println("Exception: " + exc.getMessage());
-				error.setText("Exception:" + exc.getMessage());
-				panel.revalidate();
-			}
-		}
-		else if (event.getSource() == down) {
-			try {
-				File directory = new File(dirName);
-
-				if (!directory.exists()) {
-					directory.mkdir();
-				}
-				boolean complete = true;
-				byte[] data = new byte[size];
-				name = txt.getText();
-				file = new String("*" + name + "*");
-				pw.println(file); //lets the server know which file is to be downloaded
-
-				ObjectInputStream oin = new ObjectInputStream(inFromServer);
-				String s = (String) oin.readObject();
-
-				if(s.equals("Success")) {
-					File f = new File(directory, name);
-					FileOutputStream fileOut = new FileOutputStream(f);
-					DataOutputStream dataOut = new DataOutputStream(fileOut);
-
-					//empty file case
-																	int c;
-						System.out.println("Download");
-						while((c=inFromServer.read())!=-1)
-						{	
-							System.out.print("CT: ");
-							System.out.print(c);
-							System.out.println("-"+(char)c);
-							
-							// for CAESAR cipher - Decryption
-							c=(c-3)%256;
-							if(c<0) { c=c+256; }	
-							System.out.print("PT: ");
-							System.out.print(c);
-							System.out.println("-"+(char)c);
-							dataOut.write(c);
-							dataOut.flush();
-						}
-						System.out.println("Completed");
-						error.setText("Completed");
-						panel.revalidate();
-						fileOut.close();
-				}
-				else {
-					System.out.println("Requested file not found on the server.");
-					error.setText("Requested file not found on the server.");
-					panel.revalidate();
-				}
-			} 
-			catch (Exception exc) {
-				System.out.println("Exception: " + exc.getMessage());
-				error.setText("Exception:" + exc.getMessage());
-				panel.revalidate();
-			}
-		}
-	}
-
-	private static void sendBytes(BufferedInputStream in , OutputStream out) throws Exception {
-		int c;
-		while((c=in.read())!=-1)
-		{
-			System.out.println(c);
-			out.write((c+3)%256);	// for CAESAR cipher
-			out.flush();
-		}
-	}
-
-	public static void main(String args[]) {
-		// if at least three argument are passed, consider the first one as directory path,
-		// the second one as host address and the third one as port number
-		// If host address is not present, default it to "localhost"
-		// If port number is not present, default it to 3333
-		// If directory path is not present, show error
-		if(args.length >= 3){
-			TCPClient tcp = new TCPClient(args[0], args[1], Integer.parseInt(args[2]));
-			tcp.setSize(1000, 900);
-			tcp.setVisible(true);
-		}
-		else if(args.length == 2){
-			TCPClient tcp = new TCPClient(args[0], args[1], 3333);
-			tcp.setSize(1000, 900);
-			tcp.setVisible(true);
-		}
-		else if(args.length == 1){
-			TCPClient tcp = new TCPClient(args[0], "localhost", 3333);
-			tcp.setSize(1000, 900);
-			tcp.setVisible(true);
-		}
-		else {
-			System.out.println("Please enter the client directory address as first argument while running from command line.");
-		}
-	}
-}
-
-
-TCPServer.java
---------------
-// ref: https://github.com/mansimarkaur/TCP-file-transfer
-
-import java.io.*;
-import java.net.*;
-import java.util.*;
-
-public class TCPServer {
-	public static void main(String args[]) throws Exception {
-		// if at least two argument are passed, consider the first one as directory path
-		// and the second one as port number
-		// If port number is not present, default it to 3333
-		// If directory path is not present, show error
-		if(args.length == 0) {
-			System.out.println("Please enter the server directory address as first argument while running from command line.");
-		}
-		else {
-			int id = 1;
-			System.out.println("Server started...");
-			System.out.println("Waiting for connections...");
-
-			ServerSocket welcomeSocket;
-
-			// port number is passed by the user
-			if(args.length >= 2){
-				welcomeSocket = new ServerSocket(Integer.parseInt(args[1]));
-			}
-			else{
-				welcomeSocket = new ServerSocket(3333);
-			}
-
-			while (true) {
-				Socket connectionSocket = welcomeSocket.accept();
-				System.out.println("Client with ID " + id + " connected from " + connectionSocket.getInetAddress().getHostName() + "...");
-				Thread server = new ThreadedServer(connectionSocket, id, args[0]);
-				id++;
-				server.start();
-			}
-		}
-	}
-}
-
-class ThreadedServer extends Thread {
-	int n;
-	int m;
-	String name, f, ch, fileData;
-	String filename;
-	Socket connectionSocket;
-	int counter;
-	String dirName;
-
-	public ThreadedServer(Socket s, int c, String dir) {
-		connectionSocket = s;
-		counter = c;
-
-		// set dirName to the one that's entered by the user
-		dirName = dir;
-	}
-
-	public void run() {
-		try {
-			BufferedReader in = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-			InputStream inFromClient = connectionSocket.getInputStream();
-			PrintWriter outPw = new PrintWriter(connectionSocket.getOutputStream());
-			OutputStream output = connectionSocket.getOutputStream();
-
-			ObjectOutputStream oout = new ObjectOutputStream(output);
-			oout.writeObject("Server says Hi!");
-
-			File ff = new File(dirName);
-			ArrayList<String> names = new ArrayList<String>(Arrays.asList(ff.list()));
-			int len = names.size();
-			oout.writeObject(String.valueOf(names.size()));
-
-			for(String name: names) {
-				oout.writeObject(name);
-			}
-
-			name = in.readLine();
-			ch = name.substring(0, 1);
-
-			if (ch.equals("*")) {
-				n = name.lastIndexOf("*");
-				filename = name.substring(1, n);
-				FileInputStream file = null;
-				BufferedInputStream bis = null;
-				boolean fileExists = true;
-				System.out.println("Request to download file " + filename + " recieved from " + connectionSocket.getInetAddress().getHostName() + "...");
-				filename = dirName + filename;
-				//System.out.println(filename);
-				try {
-					file = new FileInputStream(filename);
-					bis = new BufferedInputStream(file);
-				} 
-				catch (FileNotFoundException excep) {
-					fileExists = false;
-					System.out.println("FileNotFoundException:" + excep.getMessage());
-				}
-				if (fileExists) {
-					oout = new ObjectOutputStream(output);
-					oout.writeObject("Success");
-					System.out.println("Download begins");
-					sendBytes(bis, output);
-					System.out.println("Completed");
-					bis.close();
-					file.close();
-					oout.close();
-					output.close();
-				}
-				else {
-					oout = new ObjectOutputStream(output);
-					oout.writeObject("FileNotFound");
-					bis.close();
-					file.close();
-					oout.close();
-					output.close();
-				}
-			} 
-			else{
-				try {
-					boolean complete = true;
-					System.out.println("Request to upload file " + name + " recieved from " + connectionSocket.getInetAddress().getHostName() + "...");
-					File directory = new File(dirName);
-					if (!directory.exists()) {
-						System.out.println("Dir made");
-						directory.mkdir();
-					}
-
-					int size = 9022386;
-					byte[] data = new byte[size];
-					File fc = new File(directory, name);
-					FileOutputStream fileOut = new FileOutputStream(fc);
-					DataOutputStream dataOut = new DataOutputStream(fileOut);
-
-					while (complete) {
-						m = inFromClient.read(data, 0, data.length);
-						if (m == -1) {
-							complete = false;
-							System.out.println("Completed");
-						} else {
-							dataOut.write(data, 0, m);
-							dataOut.flush();
-						}
-					}
-					fileOut.close();
-				} catch (Exception exc) {
-					System.out.println(exc.getMessage());
-				}
-			}
-		} 
-		catch (Exception ex) {
-			System.out.println(ex.getMessage());
-		}
-	}
-
-	private static void sendBytes(BufferedInputStream in , OutputStream out) throws Exception {
-		int c;
-		System.out.println("Ciphertext");
-		while((c=in.read())!=-1)
-		{
-			System.out.print("PT: ");
-			System.out.print(c);
-			System.out.println("-"+(char)c);
-			c=(c+3)%256;	// for CAESAR cipher - encryption
-			out.write(c);	
-			out.flush();
-			System.out.print("CT: ");			
-			System.out.print(c);
-			System.out.println("-"+(char)c);
-				
-		}
-	}
-}
-
------------------------------------------------------------------------------------------------------------------------------------
-MyServer.java
--------------
-import java.net.*;
-import java.rmi.*;
-
-public class MyServer
-{
-	public static void main(String[] arg)
-	{
-		try 	
-		{
-			MyServerImpl asi = new MyServerImpl();
-			Naming.rebind("RMServer",asi);	//remote object associate with name 
-			System.out.println("\nServer Started...");
-		}
-		catch(Exception e)
-		{
-			System.out.println("Exception: "+e);
-		}
-	}
-}
-MyClient.java
--------------
-import java.net.*;
-import java.rmi.*;
-
-public class MyClient
-{
-	public static void main(String[] arg)
-	{
-		try 	
-		{
-		String sName = "rmi://"+arg[0]+"/RMServer";
-		
-		MyServerIntf asif = (MyServerIntf)Naming.lookup(sName);  // requesting remote objects on    // the server
-			
-		double d1=2000,d2=500;
-
-		System.out.println("Addition: "+asif.add(d1,d2));
-
-		}
-		catch(Exception e)
-		{
-			System.out.println("Exception: "+e);
-		}
-	}
-}
-
-MyServerImpl
-------------
-import java.rmi.*;
-import java.rmi.server.*;
-
-// UnicastRemoteObject supports for point-to-point active object references (invocations, parameters, and // results) using TCP streams.
-
-public class MyServerImpl extends UnicastRemoteObject implements MyServerIntf
-{
-	MyServerImpl() throws RemoteException
-	{}
-
-	public double add(double a, double b) throws RemoteException
-	{
-		return(a+b);
-	}	
-}
-
-MyServerIntf
-------------
-//function prototype
-import java.rmi.*;
-
-public interface MyServerIntf extends Remote		//remote interface
-{	int i=0;
-	double add(double a, double b) throws RemoteException;
-}
-
------------------------------------------------------------------------------------------------------------------------------------------
-analysis.awk
------------
-BEGIN {
-  rec= 0
-  drp=0
-  tot=0
-  rat=0.0
-  sum=0
-  sum1=0
-  throughput=0.0
-  throughput1=0.0
-}
-
-{
-  
-  if($1== "r" && $4== 4)
-    {
+    for non_terminal in grammar:
+        first_of(non_terminal)
     
-      rec++
-    }
+    return first
+
+def compute_follow(grammar, start_symbol, first):
+    follow = defaultdict(set)
+    follow[start_symbol].add('$')
+
+    def follow_of():
+        for lhs, productions in grammar.items():
+            for production in productions:
+                symbols = production.split()
+                trailer = follow[lhs].copy()
+                
+                for i in range(len(symbols) - 1, -1, -1):
+                    symbol = symbols[i]
+                    
+                    if symbol.isupper():
+                        follow[symbol].update(trailer)
+                        
+                        if 'epsilon' in first[symbol]:
+                            trailer.update(first[symbol] - {'epsilon'})
+                        else:
+                            trailer = first[symbol]
+                    else:
+                        trailer = {symbol}
+
+    for _ in range(len(grammar)):
+        follow_of()
+
+    return follow
+
+# Input grammar from user
+print("Enter the grammar productions (one per line). Use 'epsilon' for epsilon. Enter a blank line to finish.")
+grammar = {}
+while True:
+    line = input().strip()
+    if not line:
+        break
+    lhs, rhs = line.split('->')
+    lhs = lhs.strip()
+    rhs = [prod.strip() for prod in rhs.split('|')]
+    grammar[lhs] = rhs
+
+# Input start symbol
+start_symbol = input("Enter the start symbol: ").strip()
+
+# Compute FIRST and FOLLOW sets
+first_sets = compute_first(grammar)
+follow_sets = compute_follow(grammar, start_symbol, first_sets)
+
+# Print results
+print("\nFIRST sets:")
+for non_terminal in grammar:
+    print(f"FIRST({non_terminal}) = {first_sets[non_terminal]}")
+
+print("\nFOLLOW sets:")
+for non_terminal in grammar:
+    print(f"FOLLOW({non_terminal}) = {follow_sets[non_terminal]}")
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+from collections import defaultdict
+
+def compute_first():
+    while True:
+        changed = False
+        for nt in rules:
+            for prod in rules[nt]:
+                tokens = prod.split()
+                temp = set()
+
+                for tok in tokens:
+                    temp.update(first[tok])
+                    if "ε" not in first[tok]:  
+                        break
+                else:
+                    temp.add("ε")
+
+                if temp - first[nt]:  
+                    first[nt].update(temp)
+                    changed = True
+        if not changed:
+            break
+
+def compute_follow():
+    follow[start_symbol].add("$")
     
-    
-   if($1== "d" && $4 ==4 )
-     
-     {
-       drp++
-       
-     }
-     
-     
-     
-     if($2<1.00 && $4==4)
-      {
-     
-          sum=sum+$6
- 
-      }
- 
-    if($2<1.00 && $4==5)
-      {
-     
-          sum1=sum1+$6
- 
-      }
- 
- }
- 
- 
-  
-END {
-   
-      tot = rec + drp
-      rat = (rec/tot) *100
-      throughput= (sum*8)/1000000
-      throughput1=(sum1*8)/1000000
-       printf(" \n Packets received %d ", rec)
-       printf(" \n Packets dropped %d ", drp)
-       printf("\n Packets delivery ratio %f",rat)
-        printf("\n Throughput for udp is %f",throughput)
-         
-        printf("\n Throughput for tcp is %f",throughput1)
-     }
+    while True:
+        changed = False
+        for nt in rules:
+            for prod in rules[nt]:
+                tokens = prod.split()
+                for i, tok in enumerate(tokens):
+                    if tok in rules:
+                        temp = set()
+                        for next_tok in tokens[i+1:]:
+                            temp.update(first[next_tok])
+                            if "ε" not in first[next_tok]:
+                                break
+                        else:
+                            temp.update(follow[nt])
+                        
+                        temp.discard("ε")
+                        if temp - follow[tok]:  
+                            follow[tok].update(temp)
+                            changed = True
+        if not changed:
+            break
 
-wired.tcl
-----------
-set ns [new Simulator]
+def build_parsing_table():
+    for nt in rules:
+        for prod in rules[nt]:
+            tokens = prod.split()
+            first_set = set()
+            
+            for tok in tokens:
+                first_set.update(first[tok])
+                if "ε" not in first[tok]:
+                    break
+            else:
+                first_set.add("ε")
 
-$ns color 0 blue
-$ns color 1 black
+            for terminal in first_set - {"ε"}:
+                parsing_table[nt][terminal] = prod
+            
+            if "ε" in first_set:
+                for terminal in follow[nt]:
+                    parsing_table[nt][terminal] = "ε"
 
+def print_parsing_table():
+    print("\nLL(1) Parsing Table:")
+    print("-" * (20 + len(terminals) * 15))
+    print(f"{'Non-Terminal':<20}", end="")
+    for term in terminals:
+        print(f"{term:<15}", end="")
+    print("\n" + "-" * (20 + len(terminals) * 15))
 
-set tr [open droptail-queue-out.tr w]
-$ns trace-all $tr
+    for nt in non_terminals:
+        print(f"{nt:<20}", end="")
+        for term in terminals:
+            print(f"{parsing_table[nt].get(term, ''):<15}", end="")
+        print()
+    print("-" * (20 + len(terminals) * 15))
 
-set ftr [open droptail-queue-out.nam w]
-$ns namtrace-all $ftr
+def parse_string(input_string):
+    stack = [start_symbol, "$"]
+    input_string += " $"
+    tokens = input_string.split()
 
-set n0 [$ns node]
-set n1 [$ns node]
-set n2 [$ns node]
-set n3 [$ns node]
-set n4 [$ns node]
-set n5 [$ns node]
+    print("\nParsing Steps:")
+    print("-" * 50)
+    print(f"{'Stack':<20}{'Input':<20}{'Action'}")
+    print("-" * 50)
 
-$ns duplex-link $n0 $n2 5Mb 2ms DropTail
-$ns duplex-link $n1 $n2 10Mb 5ms DropTail
-$ns duplex-link $n2 $n3 4Mb 3ms DropTail
-$ns duplex-link $n3 $n4 100Mb 2ms DropTail
-$ns duplex-link $n3 $n5 15Mb 4ms DropTail
+    index = 0
+    while stack:
+        top = stack[-1]
+        current_token = tokens[index]
 
-set udp [new Agent/UDP]
+        print(f"{' '.join(stack):<20}{' '.join(tokens[index:]):<20}", end="")
 
-$udp set fid_ 1
-set null [new Agent/Null]
+        if top == current_token:  
+            stack.pop()
+            index += 1
+            print(f"Match {current_token}")
+        elif top in parsing_table and current_token in parsing_table[top]:  
+            stack.pop()
+            production = parsing_table[top][current_token]
+            if production != "ε":
+                stack.extend(reversed(production.split()))
+            print(f"Apply {top} -> {production}")
+        else:  
+            print("Error! String rejected.")
+            print("\n❌ Invalid String! It does NOT belong to the grammar.")
+            return False
 
-$ns attach-agent $n0 $udp 
-$ns attach-agent $n4 $null
-$ns connect $udp $null
+    if stack == ["$"] and index == len(tokens) - 1:
+        print("\n✅ Valid String! It belongs to the grammar.")
+        return True
+    else:
+        print("\n❌ Invalid String! It does NOT belong to the grammar.")
+        return False
 
-set tcp [new Agent/TCP]
-$tcp set fid_ 0
-set sink [new Agent/TCPSink]
-$ns attach-agent $n1 $tcp
-$ns attach-agent $n5 $sink
-$ns connect $tcp $sink
-$ns connect $tcp $sink
+# ---------- Main Program ---------- #
 
-set cbr [new Application/Traffic/CBR]
-$cbr attach-agent $udp
-$cbr set interval 0.020
+rules = defaultdict(list)
+first = defaultdict(set)
+follow = defaultdict(set)
+parsing_table = defaultdict(dict)
 
-set ftp [new Application/FTP]
-$ftp attach-agent $tcp
+# User Inputs
+terminals = input("Enter terminals (space-separated): ").split()
+non_terminals = input("Enter non-terminals (space-separated): ").split()
+start_symbol = non_terminals[0]
 
-$ftp set interval 0.020
-proc finish {} {
-           global ns tr ftr
-           $ns flush-trace
-           close $tr
-           close $ftr
-           exec nam droptail-queue-out.nam &
-           exec gawk -f analysis.awk droptail-queue-out.tr &
-           exit
-}
+print("Enter productions (format: A -> alpha | beta), type 'done' to stop:")
+while True:
+    inp = input().strip()
+    if inp.lower() == "done":
+        break
+    head, body = inp.split("->")
+    rules[head.strip()] = [p.strip() for p in body.split("|")]
 
-$ns at 0.1 "$cbr start"
-$ns at 2.0 "$cbr stop"
-$ns at 0.1 "$ftp start"
-$ns at 2.0 "$ftp stop"
-$ns at 2.1 "finish"
+# Initialize FIRST sets
+for t in terminals:
+    first[t] = {t}
+for nt in non_terminals:
+    first[nt] = set()
 
-$ns run
+compute_first()
+compute_follow()
+build_parsing_table()
+print_parsing_table()
 
+# Parsing Input String
+input_string = input("\nEnter input string to parse: ")
+parse_string(input_string)
 
+----------------------------------------------------------------------------------------------------------------
 
-------------------------------------------------------------------------------------------------------------------------------------------
-
----------TCP_FLOW.TCL-----------------
-set ns [ new Simulator ]
-#creating trace file
-set tf [open trace1.tr w]
-$ns trace-all $tf
-#creating nam file
-set nf [open opnam.nam w]
-$ns namtrace-all $nf
-#creating variables for throughput files
-set ft1 [open "Sender1_throughput" "w"]
-set ft2 [open "Sender2_throughput" "w"]
-set ft3 [open "Sender3_throughput" "w"]
-set ft4 [open "Total_throughput" "w"]
-
-#creating variables for bandwidth files
-set fb1 [open "Bandwidth1" "w"]
-set fb2 [open "Bandwidth2" "w"]
-set fb3 [open "Bandwidth3" "w"]
-set fb4 [open "TotalBandwidth" "w"]
-#finish procedure to call nam and xgraph
-proc finish {} {
-global ns nf ft1 ft2 ft3 ft4 fb1 fb2 fb3 fb4
-$ns flush-trace
-#closing all files
-close $nf
-close $ft1
-close $ft2
-close $ft3
-close $ft4
-close $fb1
-close $fb2
-close $fb3
-close $fb4
-#executing graphs
-exec xgraph Sender1_throughput Sender2_throughput Sender3_throughput
-Total_throughput &
-exec xgraph Bandwidth1 Bandwidth2 Bandwidth3 TotalBandwidth &
-puts "running nam..."
-exec nam opnam.nam &
-#exec awk -f analysis.awk trace1.tr
-exit 0
-}
-#record procedure to calculate total bandwidth and throughput
-proc record {} {
-global null1 null2 null3 ft1 ft2 ft3 ft4 fb1 fb2 fb3 fb4
-global ftp1 smtp1 http1
-set ns [Simulator instance]
-set time 0.1
-set now [$ns now]
-set bw0 [$null1 set bytes_]
-set bw1 [$null2 set bytes_]
-set bw2 [$null3 set bytes_]
-set totbw [expr $bw0 + $bw1 + $bw2]
-puts $ft4 "$now [expr $totbw/$time*8/1000000]"
-puts $ft1 "$now [expr $bw0/$time*8/1000000]"
-
-puts $ft2 "$now [expr $bw1/$time*8/1000000]"
-puts $ft3 "$now [expr $bw2/$time*8/1000000]"
-puts $fb1 "$now [expr $bw0]"
-puts $fb2 "$now [expr $bw1]"
-puts $fb3 "$now [expr $bw2]"
-puts $fb4 "$now [expr $totbw]"
-$null1 set bytes_ 0
-$null2 set bytes_ 0
-$null3 set bytes_ 0
-$ns at [expr $now+$time] "record"
-}
-#creating 10 nodes
-for {set i 0} {$i < 10} {incr i} {
-set n($i) [$ns node]
-}
-#creating duplex links
-$ns duplex-link $n(0) $n(1) 1Mb 10ms DropTail
-$ns duplex-link $n(0) $n(3) 1.5Mb 10ms RED
-$ns duplex-link $n(1) $n(2) 1Mb 10ms DropTail
-$ns duplex-link $n(2) $n(7) 2Mb 10ms RED
-$ns duplex-link $n(7) $n(8) 2Mb 10ms DropTail
-$ns duplex-link $n(8) $n(9) 2Mb 10ms RED
-$ns duplex-link $n(3) $n(5) 1Mb 10ms DropTail
-$ns duplex-link $n(5) $n(6) 1Mb 10ms RED
-$ns duplex-link $n(6) $n(4) 1Mb 10ms DropTail
-$ns duplex-link $n(4) $n(7) 1Mb 10ms RED
-#orienting links
-$ns duplex-link-op $n(0) $n(1) orient right-up
-$ns duplex-link-op $n(1) $n(2) orient right
-$ns duplex-link-op $n(0) $n(3) orient right-down
-$ns duplex-link-op $n(2) $n(7) orient right-down
-$ns duplex-link-op $n(7) $n(8) orient right-up
-$ns duplex-link-op $n(5) $n(6) orient right
-$ns duplex-link-op $n(6) $n(4) orient left-up
-$ns duplex-link-op $n(3) $n(5) orient right-down
-$ns duplex-link-op $n(4) $n(7) orient right-up
-$ns duplex-link-op $n(8) $n(9) orient right-down
-proc ftp_traffic {node0 node9 } {
-global ns null1 tcp1 ftp1
-set tcp1 [new Agent/TCP]
-
-set null1 [new Agent/TCPSink]
-$ns attach-agent $node0 $tcp1
-$ns attach-agent $node9 $null1
-$ns connect $tcp1 $null1
-set ftp1 [new Application/FTP]
-$ftp1 attach-agent $tcp1
-$ns at 1.0 "$ftp1 start"
-$ns at 3.2 "$ftp1 stop"
-}
-ftp_traffic $n(0) $n(8)
-proc smtp_traffic {node0 node3 } {
-global ns null2 tcp2 smtp1
-set tcp2 [new Agent/TCP]
-set null2 [new Agent/TCPSink]
-$ns attach-agent $node0 $tcp2
-$ns attach-agent $node3 $null2
-$ns connect $tcp2 $null2
-set smtp1 [new Application/Traffic/Exponential]
-$smtp1 attach-agent $tcp2
-$ns at 2.0 "$smtp1 start"
-$ns at 3.8 "$smtp1 stop"
-}
-smtp_traffic $n(3) $n(6)
-proc http_traffic {node1 node7 } {
-global ns null3 tcp3 http1
-set tcp3 [new Agent/TCP]
-set null3 [new Agent/TCPSink]
-$ns attach-agent $node1 $tcp3
-$ns attach-agent $node7 $null3
-$ns connect $tcp3 $null3
-set http1 [new Application/Traffic/Exponential]
-$http1 attach-agent $tcp3
-$ns at 0.2 "$http1 start"
-$ns at 3.2 "$http1 stop" }
-http_traffic $n(0) $n(7)
-#scheduling events
-$ns at 0.5 "record"
-$ns at 0.2 "$ns trace-annotate \"Starting HTTP from 0 to 7\""
-$ns at 1.0 "$ns trace-annotate \"Starting FTP from 0 to 8\""
-$ns at 2.0 "$ns trace-annotate \"Starting SMTP from 3 to 6\""
-$ns at 5.0 "finish"
-$ns run
-
-
--------------Tcp_Congestion.tcl-------------------------------
-set ns [new Simulator]
-set f [ open congestion.tr w ]
-$ns trace-all $f
-set nf [ open congestion.nam w ]
-$ns namtrace-all $nf
-$ns color 1 Red
-$ns color 2 Blue
-$ns color 3 White
-$ns color 4 Green
-#to create nodes
-set n0 [$ns node]
-set n1 [$ns node]
-set n2 [$ns node]
-set n3 [$ns node]
-set n4 [$ns node]
-set n5 [$ns node]
-# to create the link between the nodes with bandwidth, delay and queue
-$ns duplex-link $n0 $n2 2Mb 10ms DropTail
-$ns duplex-link $n1 $n2 2Mb 10ms DropTail
-$ns duplex-link $n2 $n3 0.3Mb 200ms DropTail
-$ns duplex-link $n3 $n4 0.5Mb 40ms DropTail
-$ns duplex-link $n3 $n5 0.5Mb 30ms DropTail
-# Sending node with agent as Reno Agent
-set tcp1 [new Agent/TCP/Reno]
-$ns attach-agent $n0 $tcp1
-set tcp2 [new Agent/TCP/Reno]
-$ns attach-agent $n1 $tcp2
-set tcp3 [new Agent/TCP/Reno]
-$ns attach-agent $n2 $tcp3
-set tcp4 [new Agent/TCP/Reno]
-$ns attach-agent $n1 $tcp4
-$tcp1 set fid_ 1
-$tcp2 set fid_ 2
-$tcp3 set fid_ 3
-$tcp4 set fid_ 4
-# receiving (sink) node
-set sink1 [new Agent/TCPSink]
-$ns attach-agent $n4 $sink1
-set sink2 [new Agent/TCPSink]
-
-$ns attach-agent $n5 $sink2
-set sink3 [new Agent/TCPSink]
-$ns attach-agent $n3 $sink3
-set sink4 [new Agent/TCPSink]
-$ns attach-agent $n4 $sink4
-# establish the traffic between the source and sink
-$ns connect $tcp1 $sink1
-$ns connect $tcp2 $sink2
-$ns connect $tcp3 $sink3
-$ns connect $tcp4 $sink4
-# Setup a FTP traffic generator on "tcp"
-set ftp1 [new Application/FTP]
-$ftp1 attach-agent $tcp1
-$ftp1 set type_ FTP
-set ftp2 [new Application/FTP]
-$ftp2 attach-agent $tcp2
-$ftp2 set type_ FTP
-set ftp3 [new Application/FTP]
-$ftp3 attach-agent $tcp3
-$ftp3 set type_ FTP
-set ftp4 [new Application/FTP]
-$ftp4 attach-agent $tcp4
-$ftp4 set type_ FTP
-
-# RTT Calculation Using Ping 
-set p0 [new Agent/Ping]
-$ns attach-agent $n0 $p0
-set p1 [new Agent/Ping]
-$ns attach-agent $n4 $p1
-#Connect the two agents
-$ns connect $p0 $p1
-# Method call from ping.cc file
-Agent/Ping instproc recv {from rtt} {
-$self instvar node_
-puts "node [$node_ id] received ping answer from \
-$from with round-trip-time $rtt ms."
-}
-
-
-# start/stop the traffic
-$ns at 0.2 "$p0 send"
-$ns at 0.3 "$p1 send"
-$ns at 0.5 "$ftp1 start"
-$ns at 0.6 "$ftp2 start"
-$ns at 0.7 "$ftp3 start"
-$ns at 0.8 "$ftp4 start"
-$ns at 66.0 "$ftp4 stop"
-$ns at 67.0 "$ftp3 stop"
-$ns at 68.0 "$ftp2 stop"
-$ns at 70.0 "$ftp1 stop"
-$ns at 70.1 "$p0 send"
-$ns at 70.2 "$p1 send"
-# Set simulation end time
-$ns at 80.0 "finish"
-# procedure to plot the congestion window
-# cwnd_ used from tcp-reno.cc file
-proc plotWindow {tcpSource outfile} {
-global ns
-set now [$ns now]
-set cwnd_ [$tcpSource set cwnd_]
-# the data is recorded in a file called congestion.xg.
-puts $outfile "$now $cwnd_"
-$ns at [expr $now+0.1] "plotWindow $tcpSource $outfile"
-}
-set outfile [open "congestion.xg" w]
-$ns at 0.0 "plotWindow $tcp1 $outfile"
-proc finish {} {
-exec nam congestion.nam &
-exec xgraph congestion.xg -geometry 300x300 &
-exit 0
-}
-# Run simulation
-$ns run
-
-------------------------Congestion_throughput.awk -------------------------------------------
-BEGIN {
-startTime = 0;
-endTime = 0;
-TotalPktRec = 0;
-throughput = 0;
-startTime1 = 0;
-endTime1 = 0;
-
-endTime2 = 0;
-endTime3 = 0;
-endTime4 = 0;
-endTime5 = 0;
-endTime6 = 0;
-endTime7 = 0;
-endTime8 = 0;
-endTime9 = 0;
-endTime10 = 0;
-TotalPktRec1 = 0;
-TotalPktRec2 = 0;
-TotalPktRec3 = 0;
-TotalPktRec4 = 0;
-TotalPktRec5 = 0;
-TotalPktRec6 = 0;
-TotalPktRec7 = 0;
-TotalPktRec8 = 0;
-TotalPktRec9 = 0;
-TotalPktRec10 = 0;
-throughput1 = 0;
-throughput2 = 0;
-throughput3 = 0;
-throughput4 = 0;
-throughput5 = 0;
-throughput6 = 0;
-throughput7 = 0;
-throughput8 = 0;
-throughput9 = 0;
-throughput10 = 0;
-}
+Lex:
+%{
+#include<stdio.h>
+%}
+%%
+"\n"|"\t"|" " {printf("\nWhite Space");}
+#.* {printf("\n%s - preprocessor directive",yytext);}
+int|float|double|char|while|for|if|else|scanf|printf|main|getch {printf("\n%s-keyword",yytext);}
+"++"|"--" {printf("\n%s - unary operator",yytext);}
+"+"|"-"|"*"|"/"|"%" {printf("\n%s - Arithmetic Operator",yytext);}
+"<"|">"|"<="|">="|"==" {printf("\n%s - Relational Operator",yytext);}
+"&&"|"||"|"!" {printf("\n%s - Logical Operator",yytext);}
+"="|"+="|"-="|"*=" {printf("\n%s - Assignment Operator",yytext);}
+[a-zA-Z_]([a-zA-Z0-9_])* {printf("\n%s - Identifier",yytext);}
+[0-9]+ {printf("\n%s - digit",yytext);}
+"{" {printf("\n%s - block begins",yytext);}
+"}" {printf("\n%s - block exits",yytext);}
+[();,] {printf("\n%s - separator",yytext);}
+\".*\" {printf("\n%s - String",yytext);}
+%%
+int yywrap()
+{}
+int main(int argc,char **argv)
 {
-event = $1;
-time = $2;
-from = $3;
-to = $4;
-pktSize = $6;
-flow_id = $8;
-seq_no = $11;
-if (seq_no == 0)
-startTime = time;
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since seq_no
-= -1 for ping
-
+if(argc>1)
 {
-endTime = time;
-TotalPktRec += pktSize;
-}
-if (time < 35)
+FILE *file;
+file=fopen(argv[1],"r");
+if(!file)
 {
-if (seq_no == 0)
-startTime1 = time;
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
-
-seq_no = -1 for ping
+printf("Couldn't Open File %s",argv[1]);
+exit(0);
+}
+yyin=file;
+}
+yylex();
+return 0;
+}
+input.c:
+#include<stdio.h>
+int main()
 {
-endTime1 = time;
-TotalPktRec1 += pktSize;
-}
-}
-else if (time >=35 && time < 40)
+int fact=1,n=5;
+for(int i=1;i<=n;i++)
 {
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
+fact=fact*i;
+}
+printf("Factorial of 5 = %d",fact);
+}
+----------------------------------------------------------------------------------------------------------------------------------
+Lex :
+alpha [A-Za-z]
+digit [0-9]
+%%
+[ \t\n]
+if return IF;
+then return THEN;
+else return ELSE;
+{digit}+ return NUM;
+{alpha}({alpha}|{digit})* return ID;
+"<=" return LE;
+">=" return GE;
+"==" return EQ;
+"!=" return NE;
+"||" return OR;
+"&&" return AND;
+. return yytext[0];
+%%
+Yacc:
+%{
+#include<stdio.h>
+#include<stdlib.h>
+int yylex();
+int yyerror();
+%}
+%token ID NUM IF THEN LE GE EQ NE OR AND ELSE
+%right '='
+%left AND OR
+%left '<' '>' LE GE EQ NE
+%left '+' '-'
+%left '*' '/'
+%right UMINUS
+%left '!'
+%%
+S :ST {printf("Input Accepted.\n");exit(0);};
+ST :IF '(' E2 ')' THEN ST1 ';' ELSE ST1 ';'
+|IF '(' E2 ')' THEN ST1 ';'
+;
+ST1 :ST
+|E
+;
+E :ID '=' E
+|E '+' E
+|E '-' E
+|E '*' E
+|E '/' E
+|E '<' E
+|E '>' E
+|E LE E
+|E GE E
+|E EQ E
+|E NE E
+|E OR E
+|E AND E
+|ID
+|NUM
+;
+E2 :E '<' E
+|E '>' E
+|E LE E
+|E GE E
+|E EQ E
+|E NE E
+|E OR E
+|E AND E
+|ID
+|NUM
+;
+%%
+#include "lex.yy.c"
+int main(){
+printf("Enter the Expression : ");
+yyparse();
+return 0;
+}
 
-seq_no = -1 for ping
+----------------------------------------------------------------------------------------------------------------------------------------------
+lex:
+%%
+[ \n\t] ;
+for return FOR;
+while return WHILE;
+[a-zA-Z_]([a-zA-Z_])* return ID;
+[0-9]+ return DIGIT;
+"<=" return LE;
+">=" return GE;
+"==" return EQ;
+. return yytext[0];
+%%
+int yywrap()
 {
-endTime2 = time;
-TotalPktRec2 += pktSize;
+return 1;
 }
-}
-else if (time >=40 && time < 45)
+yacc:
+%{
+#include<stdio.h>
+%}
+%token FOR WHILE ID DIGIT LE GE EQ
+%right '='
+%left '<''>'LE GE EQ
+%left '+''-'
+%%
+S :ST{printf("Input Accepted");exit(0);};
+ST :FOR'('E';'E2';'E')'DEF
+|WHILE'('E')'DEF
+;
+DEF:'{'BODY'}'
+|ST
+|E';'
+|';'
+;
+BODY :BODY BODY
+|ST
+|E';'
+|
+;
+E :ID'='E
+|E'+'E
+|E'-'E
+|E'*'E
+|E'/'E
+|E'>'E
+|E'<'E
+|E LE E
+|E GE E
+|E EQ E
+|E'+''+'
+|E'-''-'
+|DIGIT
+|ID
+;
+E2 :E'>'E
+|E'<'E
+|E LE E
+|E GE E
+|E EQ E
+;
+%%
+#include "lex.yy.c"
+int main()
 {
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
-
-seq_no = -1 for ping
+printf("Enter expression:\n");
+yyparse();
+}
+yyerror()
 {
-endTime3 = time;
-TotalPktRec3 += pktSize;
+printf("invalid expression");
 }
-}
-else if (time >=45 && time < 50)
+
+------------------------------------------------------------------------------------------------------------------------------
+
+lex:
+%%
+[\n \t] ;
+int|float|char|double return TYPE;
+return return RETURN;
+[0-9]+ return NUM;
+[a-zA-Z_]([a-zA-Z0-9_])* return ID;
+. return yytext[0];
+%%
+yacc:
+%{
+#include<stdio.h>
+%}
+%token NUM ID TYPE RETURN
+%right '='
+%left '+''-'
+%left '*''/'
+%%
+S :FUN{printf("Input Accepted/n");exit(0);};
+FUN :TYPE ID'('PARAM')''{'BODY'}';
+PARAM :PARAM','TYPE ID
+|TYPE ID
+|TYPE ID'='NUM
+|TYPE ID'['']'
+|
+;
+BODY :BODY BODY
+|PARAM';'
+|RETURN E';'
+|
+;
+E :ID'='E
+|E'+'E
+|E'-'E
+|E'*'E
+|E'/'E
+|ID'['NUM']''='E
+|ID'['NUM']'
+|NUM
+|ID
+;
+%%
+#include "lex.yy.c"
+main()
 {
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
+printf("Enter Expression : ");
+yyparse();
+}
+------------------------------------------------------------------------------------------------------------------------------------
 
-seq_no = -1 for ping
-{
-endTime4 = time;
-TotalPktRec4 += pktSize;
-}
-}
-else if (time >=50 && time < 55)
-{
+%{
+#include "y.tab.h"
+%}
 
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
+alpha [a-zA-Z]
+digit [0-9]
 
-seq_no = -1 for ping
-{
-endTime5 = time;
-TotalPktRec5 += pktSize;
-}
-}
-else if (time >=55 && time < 60)
-{
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
+%%
+[ \t\n]         /* ignore whitespace */
+switch          return SWITCH;
+case            return CASE;
+default         return DEFAULT;
+break           return BREAK;
+{digit}+        { yylval = atoi(yytext); return NUM; }
+{alpha}({alpha}|{digit})* return ID;
 
-seq_no = -1 for ping
-{
-endTime6 = time;
-TotalPktRec6 += pktSize;
-}
-}
-else if (time >=60 && time < 65)
-{
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
+.               return yytext[0];
+%%
 
-seq_no = -1 for ping
-{
-endTime7 = time;
-TotalPktRec7 += pktSize;
-}
-}
-else if (time >=65 && time <67)
-{
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
+%{
+#include <stdio.h>
+#include <stdlib.h>
+int yylex();
+void yyerror(const char *s);
+%}
 
-seq_no = -1 for ping
-{
-endTime8 = time;
-TotalPktRec8 += pktSize;
-}
-}
-else if (time >=67 && time <69)
-{
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
+%token SWITCH CASE DEFAULT BREAK ID NUM
 
-seq_no = -1 for ping
-{
-endTime9 = time;
-TotalPktRec9 += pktSize;
-}
-}
-else
-{
-if ((event = "r") && ((to == 3) || (to == 4) || (to == 5)) && (seq_no > 0)) #since
+%%
 
-seq_no = -1 for ping
+switch_statement : SWITCH '(' ID ')' '{' case_list '}'
+                 ;
 
-{
-endTime10 = time;
-TotalPktRec10 += pktSize;
-}
-}
-}
-END {
-throughput = (TotalPktRec * 8)/(endTime - startTime); #in bits/sec
-throughput1 = (TotalPktRec1 * 8)/(endTime1 - startTime1); #in bits/sec
-throughput2 = ((TotalPktRec2) * 8)/(endTime2 - 35); #in bits/sec
-throughput3 = ((TotalPktRec3) * 8)/(endTime3 - 40); #in bits/sec
-throughput4 = ((TotalPktRec4) * 8)/(endTime4 - 45); #in bits/sec
-throughput5 = ((TotalPktRec5) * 8)/(endTime5 - 50); #in bits/sec
-throughput6 = ((TotalPktRec6) * 8)/(endTime6 - 55); #in bits/sec
-throughput7 = ((TotalPktRec7) * 8)/(endTime7 - 60); #in bits/sec
-throughput8 = ((TotalPktRec8) * 8)/(endTime8 - 65); #in bits/sec
-throughput9 = ((TotalPktRec9) * 8)/(endTime9 - 67); #in bits/sec
-throughput10 = ((TotalPktRec10) * 8)/(endTime10 - 69); #in bits/sec
-printf ("\nOverall throughput: %d\n", throughput);
-printf ("\nThroughput by intervals:\n");
-printf ("start-35: %d\n",throughput1);
-printf ("35-40: %d\n",throughput2);
-printf ("40-45: %d\n",throughput3);
-printf ("45-50: %d\n",throughput4);
-printf ("50-55: %d\n",throughput5);
-printf ("55-60: %d\n",throughput6);
-printf ("60-65: %d\n",throughput7);
-printf ("65-67: %d\n",throughput8);
-printf ("67-69: %d\n",throughput9);
-printf ("69-end: %d\n\n",throughput10);
+case_list : case_item
+          | case_list case_item
+          ;
+
+case_item : CASE NUM ':' statement_list BREAK ';'
+          | DEFAULT ':' statement_list BREAK ';'
+          ;
+
+statement_list : statement
+               | statement_list statement
+               ;
+
+statement : ID '=' expression ';'
+          | /* empty */
+          ;
+
+expression : NUM
+           | ID
+           | expression '+' expression
+           | expression '-' expression
+           | expression '*' expression
+           | expression '/' expression
+           ;
+
+%%
+
+void yyerror(const char *s) {
+    fprintf(stderr, "Error: %s\n", s);
 }
 
-----------------------------------Congestion_dropRatio.awk-------------------------
-BEGIN {
-TotalPktDropped = 0;
-PktDropped1 = 0;
-PktDropped2 = 0;
-PktDropped3 = 0;
-PktDropped4 = 0;
-
+int main() {
+    printf("Enter a switch statement: \n");
+    yyparse();
+    printf("Valid switch statement\n");
+    return 0;
 }
-{
-event = $1;
-time = $2;
-from = $3;
-to = $4;
-pktSize = $6;
-flow_id = $8;
-seq_no = $11;
-if (event == "d" && from == 2)
-TotalPktDropped ++ ;
-if (time < 20)
-{
-if (event == "d" && from == 2)
-PktDropped1 ++ ;
-
-}
-else if (time >=20 && time < 40)
-{
-if (event == "d" && from == 2)
-PktDropped2 ++ ;
-
-}
-else if (time >=40 && time < 60)
-{
-if (event == "d" && from == 2)
-PktDropped3 ++ ;
-
-}
-else
-{
-if (event == "d" && from == 2)
-PktDropped4 ++ ;
-
-}
-}
-END {
-printf ("\nOverall Packets dropped: %d\n", TotalPktDropped);
-printf ("\nPackets dropped by intervals:\n");
-printf ("start-20: %d\n",PktDropped1);
-printf ("20-40: %d\n",PktDropped2);
-printf ("40-60: %d\n",PktDropped3);
-printf ("60-end: %d\n",PktDropped4);
-}
-
---------------------------Distance Vector---------------------------------------
-set ns [new Simulator]
-$ns rtproto DV
-$ns color 1 green
-set node0 [$ns node]
-set node1 [$ns node]
-set node2 [$ns node]
-set node3 [$ns node]
-set node4 [$ns node]
-
-set node5 [$ns node]
-set node6 [$ns node]
-set tf [open out_dv.tr w]
-$ns trace-all $tf
-set nf [open out_dv.nam w]
-$ns namtrace-all $nf
-
-set ft [open "dvr_th" "w"]
-$node0 label "node 0"
-$node1 label "node 1"
-$node2 label "node 2"
-$node3 label "node 3"
-$node4 label "node 4"
-
-$node5 label "node 5"
-$node6 label "node 6"
-$ns duplex-link $node0 $node1 1.5Mb 10ms DropTail
-$ns duplex-link $node1 $node2 1.5Mb 10ms DropTail
-$ns duplex-link $node2 $node3 1.5Mb 10ms DropTail
-$ns duplex-link $node3 $node4 1.5Mb 10ms DropTail
-
-$ns duplex-link $node4 $node5 1.5Mb 10ms DropTail
-$ns duplex-link $node5 $node6 1.5Mb 10ms DropTail
-$ns duplex-link $node6 $node0 1.5Mb 10ms DropTail
-$ns duplex-link-op $node0 $node1 orient left-down
-$ns duplex-link-op $node1 $node2 orient left-down
-$ns duplex-link-op $node2 $node3 orient right-down
-$ns duplex-link-op $node3 $node4 orient right
-$ns duplex-link-op $node4 $node5 orient right-up
-$ns duplex-link-op $node5 $node6 orient left-up
-$ns duplex-link-op $node6 $node0 orient left-up
-
-set tcp2 [new Agent/TCP]
-$tcp2 set class_ 1
-$ns attach-agent $node0 $tcp2
-set sink2 [new Agent/TCPSink]
-$ns attach-agent $node3 $sink2
-$ns connect $tcp2 $sink2
-set traffic_ftp2 [new Application/FTP]
-
-$traffic_ftp2 attach-agent $tcp2
-proc record {} {
-global sink2 tf ft
-global ftp
-set ns [Simulator instance]
-set time 0.1
-set now [$ns now]
-set bw0 [$sink2 set bytes_]
-puts $ft "$now [expr $bw0/$time*8/1000000]"
-$sink2 set bytes_ 0
-$ns at [expr $now+$time] "record"
-}
-
-proc finish {} {
-global ns nf
-$ns flush-trace
-close $nf
-exec nam out_dv.nam &
-exec xgraph dvr_th &
-exit 0
-}
-
-$ns at 0.55 "record"
-#Schedule events for the CBR agents
-$ns at 0.5 "$node0 color \"Green\""
-$ns at 0.5 "$node3 color \"Green\""
-$ns at 0.5 "$ns trace-annotate \"Starting FTP node0 to node6\""
-$ns at 0.5 "$node0 label-color green"
-$ns at 0.5 "$node3 label-color green"
-$ns at 0.5 "$traffic_ftp2 start"
-$ns at 0.5 "$node1 label-color green"
-
-$ns at 0.5 "$node2 label-color green"
-$ns at 0.5 "$node4 label-color blue"
-$ns at 0.5 "$node5 label-color blue"
-$ns at 0.5 "$node6 label-color blue"
-$ns rtmodel-at 2.0 down $node2 $node3
-
-$ns at 2.0 "$node4 label-color green"
-$ns at 2.0 "$node5 label-color green"
-$ns at 2.0 "$node6 label-color green"
-$ns at 2.0 "$node1 label-color blue"
-$ns at 2.0 "$node2 label-color blue"
-
-$ns rtmodel-at 3.0 up $node2 $node3
-$ns at 3.0 "$traffic_ftp2 start"
-$ns at 4.9 "$traffic_ftp2 stop"
-$ns at 5.0 "finish"
-$ns run
-
-----------------------------------LS-------------------------------------------
-set ns [new Simulator]
-$ns rtproto LS
-$ns color 1 green
-set node0 [$ns node]
-set node1 [$ns node]
-set node2 [$ns node]
-set node3 [$ns node]
-set node4 [$ns node]
-set node5 [$ns node]
-set node6 [$ns node]
-set tf [open out_ls.tr w]
-$ns trace-all $tf
-set nf [open out_ls.nam w]
-$ns namtrace-all $nf
-set ft [open "lsr_th" "w"]
-$node0 label "node 0"
-$node1 label "node 1"
-$node2 label "node 2"
-$node3 label "node 3"
-$node4 label "node 4"
-$node5 label "node 5"
-$node6 label "node 6"
-$ns duplex-link $node0 $node1 1.5Mb 10ms DropTail
-$ns duplex-link $node1 $node2 1.5Mb 10ms DropTail
-$ns duplex-link $node2 $node3 1.5Mb 10ms DropTail
-$ns duplex-link $node3 $node4 1.5Mb 10ms DropTail
-$ns duplex-link $node4 $node5 1.5Mb 10ms DropTail
-$ns duplex-link $node5 $node6 1.5Mb 10ms DropTail
-$ns duplex-link $node6 $node0 1.5Mb 10ms DropTail
-
-$ns duplex-link-op $node0 $node1 orient left-down
-$ns duplex-link-op $node1 $node2 orient left-down
-$ns duplex-link-op $node2 $node3 orient right-down
-$ns duplex-link-op $node3 $node4 orient right
-$ns duplex-link-op $node4 $node5 orient right-up
-$ns duplex-link-op $node5 $node6 orient left-up
-$ns duplex-link-op $node6 $node0 orient left-up
-
-set tcp2 [new Agent/TCP]
-$tcp2 set class_ 1
-$ns attach-agent $node0 $tcp2
-set sink2 [new Agent/TCPSink]
-$ns attach-agent $node3 $sink2
-$ns connect $tcp2 $sink2
-
-set traffic_ftp2 [new Application/FTP]
-$traffic_ftp2 attach-agent $tcp2
-proc record {} {
-global sink2 tf ft
-global ftp
-
-set ns [Simulator instance]
-set time 0.1
-set now [$ns now]
-set bw0 [$sink2 set bytes_]
-puts $ft "$now [expr $bw0/$time*8/1000000]"
-$sink2 set bytes_ 0
-$ns at [expr $now+$time] "record"
-}
-
-proc finish {} {
-global ns nf
-$ns flush-trace
-close $nf
-
-exec nam out_ls.nam &
-exec xgraph lsr_th &
-exit 0
-}
-
-$ns at 0.55 "record"
-#Schedule events for the CBR agents
-$ns at 0.5 "$node0 color \"Green\""
-$ns at 0.5 "$node3 color \"Green\""
-$ns at 0.5 "$ns trace-annotate \"Starting FTP node0 to node3\""
-$ns at 0.5 "$node0 label-color green"
-$ns at 0.5 "$node3 label-color green"
-
-$ns at 0.5 "$traffic_ftp2 start"
-$ns at 0.5 "$node1 label-color green"
-$ns at 0.5 "$node2 label-color green"
-$ns at 0.5 "$node4 label-color blue"
-$ns at 0.5 "$node5 label-color blue"
-$ns at 0.5 "$node6 label-color blue"
-$ns rtmodel-at 2.0 down $node2 $node3
-$ns at 2.0 "$node4 label-color green"
-$ns at 2.0 "$node5 label-color green"
-$ns at 2.0 "$node6 label-color green"
-$ns at 2.0 "$node1 label-color blue"
-$ns at 2.0 "$node2 label-color blue"
-$ns rtmodel-at 3.0 up $node2 $node3
-$ns at 3.0 "$traffic_ftp2 start"
-$ns at 4.9 "$traffic_ftp2 stop"
-$ns at 5.0 "finish"
-$ns run
-
-----------------------------------------Routing_throughput.awk-----------------------------------
-BEGIN {
-recvdSize = 0
-startTime = 0.5
-stopTime = 5.0
-}
-
-{
-event = $1
-time = $2
-node_id = $3
-pkt_size = $6
-level = $4
-
-if (event == "s") {
-if (time < startTime) {
-startTime = time
-}
-}
-
-if (event == "r") {
-if (time > stopTime) {
-stopTime = time
-}
-recvdSize += pkt_size
-}
-}
-
-END {
-printf("Average Throughput[kbps] = %.2f\n StartTime=%.2f\nStopTime=%.2f\n",(recvdSize/(stopTime-startTime))*(8/1000),startTime,stopTime)
-}
-
-
-------------------------------Multicast_routing.tcl-------------------------------
-set ns [new Simulator -multicast on]
-#Turn on Tracing
-set tf [open output.tr w]
-$ns trace-all $tf
-
-# Turn on nam Tracing
-set fd [open mcast.nam w]
-$ns namtrace-all $fd
-
-# Create nodes
-set n0 [$ns node]
-set n1 [$ns node]
-set n2 [$ns node]
-set n3 [$ns node]
-set n4 [$ns node]
-set n5 [$ns node]
-set n6 [$ns node]
-set n7 [$ns node]
-
-# Create links with DropTail Queues
-$ns duplex-link $n0 $n2 1.5Mb 10ms DropTail
-$ns duplex-link $n1 $n2 1.5Mb 10ms DropTail
-$ns duplex-link $n2 $n3 1.5Mb 10ms DropTail
-$ns duplex-link $n3 $n4 1.5Mb 10ms DropTail
-$ns duplex-link $n3 $n7 1.5Mb 10ms DropTail
-$ns duplex-link $n4 $n5 1.5Mb 10ms DropTail
-$ns duplex-link $n4 $n6 1.5Mb 10ms DropTail
-
-#DM: dense-mode; SM: sparse-mode
-set mproto DM
-set mrthandle [$ns mrtproto $mproto {}]
-
-# Set two groups with group addresses
-set group1 [Node allocaddr]
-
-set group2 [Node allocaddr]
-
-# UDP Transport agent for the traffic source for group1
-set udp0 [new Agent/UDP]
-$ns attach-agent $n0 $udp0
-$udp0 set dst_addr_ $group1
-$udp0 set dst_port_ 0
-set cbr1 [new Application/Traffic/CBR]
-$cbr1 attach-agent $udp0
-
-# Transport agent for the traffic source for group2
-set udp1 [new Agent/UDP]
-$ns attach-agent $n1 $udp1
-$udp1 set dst_addr_ $group2
-$udp1 set dst_port_ 0
-set cbr2 [new Application/Traffic/CBR]
-$cbr2 attach-agent $udp1
-
-# Create receiver to accept the packets
-set rcvr1 [new Agent/Null]
-$ns attach-agent $n5 $rcvr1
-$ns at 1.0 "$n5 join-group $rcvr1 $group1"
-set rcvr2 [new Agent/Null]
-$ns attach-agent $n6 $rcvr2
-$ns at 1.5 "$n6 join-group $rcvr2 $group1"
-
-set rcvr3 [new Agent/Null]
-$ns attach-agent $n7 $rcvr3
-$ns at 2.0 "$n7 join-group $rcvr3 $group1"
-
-set rcvr4 [new Agent/Null]
-$ns attach-agent $n5 $rcvr1
-$ns at 2.5 "$n5 join-group $rcvr4 $group2"
-
-set rcvr5 [new Agent/Null]
-$ns attach-agent $n6 $rcvr2
-$ns at 3.0 "$n6 join-group $rcvr5 $group2"
-
-set rcvr6 [new Agent/Null]
-$ns attach-agent $n7 $rcvr3
-
-#The nodes are leaving the group at specified times
-$ns at 3.5 "$n7 join-group $rcvr6 $group2"
-$ns at 4.0 "$n5 leave-group $rcvr1 $group1"
-$ns at 4.5 "$n6 leave-group $rcvr2 $group1"
-$ns at 5.0 "$n7 leave-group $rcvr3 $group1"
-$ns at 5.5 "$n5 leave-group $rcvr4 $group2"
-$ns at 6.0 "$n6 leave-group $rcvr5 $group2"
-$ns at 6.5 "$n7 leave-group $rcvr6 $group2"
-
-# Schedule events
-
-$ns at 0.5 "$cbr1 start"
-$ns at 9.5 "$cbr1 stop"
-$ns at 0.5 "$cbr2 start"
-$ns at 9.5 "$cbr2 stop"
-
-#post-processing
-
-$ns at 10.0 "finish"
-proc finish {} {
-  global ns tf
-   $ns flush-trace
-   close $tf
-   exec nam mcast.nam &amp;
-   exit 0
-}
-
-$ns set-animation-rate 3.0ms
-$ns run
- 
-------------------------------analysis.awk------------------------------
-BEGIN {
-    recvdSize = 0
-    startTime = 0.5
-    stopTime = 0.0
-}
-
-{
-    event = $1
-    time = $2
-    node_id = $3
-    pkt_size = $6
-
-    # Update startTime and stopTime based on packet reception
-    if (event == "s") {
-        if (time < startTime) {
-            startTime = time
-        }
-    }
-
-    if (event == "r") {
-        if (time > stopTime) {
-            stopTime = time
-        }
-        recvdSize += pkt_size
-    }
-}
-
-END {
-    if (stopTime > startTime) {
-        avgThroughput = (recvdSize / (stopTime - startTime)) * (8 / 1000);  # Convert to kbps
-        printf("Average Throughput [kbps] = %.2f\nStart Time = %.2f\nStop Time = %.2f\n", avgThroughput, startTime, stopTime);
-    } else {
-        printf("No packets received during the specified time interval.\n");
-    }
-}
-
---------------------------------------DHCPClient.java---------------------------------
-import java.net.*;
-import java.util.Arrays;
-
-public class DHCPClient {
-    private static int SERVER_PORT = 4900;
-    private static String SERVER_IP = "127.0.0.1"; // Change to your server's IP
-
-    public static void main(String[] args) {
-        try {
-            DatagramSocket socket = new DatagramSocket();
-            InetAddress serverAddress = InetAddress.getByName(SERVER_IP);
-
-            // Create and send DHCP request
-            byte[] requestData = createDHCPRequest("00:11:22:33:44:55"); // Replace with your MAC address
-            DatagramPacket requestPacket = new DatagramPacket(requestData, requestData.length, serverAddress, SERVER_PORT);
-            socket.send(requestPacket);
-
-            // Receive DHCP response
-            byte[] receiveData = new byte[1024];
-            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-            socket.receive(receivePacket);
-
-            // Process and print DHCP response
-            String response = new String(receivePacket.getData()).trim();
-            System.out.println("Received DHCP Response: " + response);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static byte[] createDHCPRequest(String macAddress) {
-        String request = "DHCP Request with MAC: " + macAddress;
-        return request.getBytes();
-    }
-}
-
-
--------------------------DHCPServer.java -----------------------------------
-import java.io.*;
-import java.net.*;
-import java.util.*;
-
-public class DHCPServer {
-    private static final int SERVER_PORT = 4900;
-    private static final String SERVER_IP = "127.0.0.1"; // Change to your server's IP
-    private static final String IP_ALLOCATIONS_FILE = "ip_allocations.txt";
-
-    private static List<String> availableIpAddresses = new ArrayList<>();
-    private static Map<String, String> ipAllocations = new HashMap<>();
-
-    public static void main(String[] args) {
-        System.out.println("Server Started...");
-		initializeIpAddresses();
-	
-        try {
-            DatagramSocket socket = new DatagramSocket(SERVER_PORT);
-
-            while (true) {
-                byte[] receiveData = new byte[1024];
-                DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                socket.receive(receivePacket);
-
-                // Simulate IP address allocation
-                InetAddress clientAddress = receivePacket.getAddress();
-                String macAddress = extractMacAddress(receiveData);
-                String allocatedIp = allocateIpAddress(macAddress);
-
-                // Create and send DHCP response
-                byte[] responseData = createDHCPResponse(macAddress, allocatedIp);
-                DatagramPacket responsePacket = new DatagramPacket(responseData, responseData.length,
-                        clientAddress, receivePacket.getPort());
-                socket.send(responsePacket);
-
-                System.out.println("Allocated IP " + allocatedIp + " to client with MAC " + macAddress);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void initializeIpAddresses() {
-        for (int i = 2; i <= 254; i++) {
-            availableIpAddresses.add("192.168.1." + i);
-        }
-    }
-
-    private static String extractMacAddress(byte[] data) {
-        return "00:11:22:33:44:55"; // Placeholder
-    }
-
-    private static String allocateIpAddress(String macAddress) {
-        if (availableIpAddresses.isEmpty()) {
-            return "No available IP addresses";
-        }
-
-        Random random = new Random();
-        int index = random.nextInt(availableIpAddresses.size());
-        String allocatedIp = availableIpAddresses.remove(index);
-
-        // Bind MAC address with the allocated IP address
-        ipAllocations.put(macAddress, allocatedIp);
-
-        return allocatedIp;
-    }
-
-    private static byte[] createDHCPResponse(String macAddress, String allocatedIp) {
-        return ("Allocated IP: " + allocatedIp).getBytes();
-    }
-}
-
---------------------------LAN  Ethernet ------------------------------
-set ns [new Simulator]
-
-set tr [open "LAN.tr" w]
-$ns trace-all $tr
-
-set nam [open "LAN.nam" w]
-$ns namtrace-all $nam
-
-set n1 [$ns node]
-set n2 [$ns node]
-set n3 [$ns node]
-set n4 [$ns node]
-set n5 [$ns node]
-set n6 [$ns node]
-
-$ns make-lan "$n1 $n2 $n3 $n4 $n5 $n6" 0.2Mb 20ms LL Queue/DropTail Mac/802_3
-
-set tcpsendagent1 [new Agent/TCP]
-set tcpsendagent2 [new Agent/TCP]
-
-set tcprecvagent1 [new Agent/TCPSink]
-set tcprecvagent2 [new Agent/TCPSink]
-
-$ns attach-agent $n1 $tcpsendagent1
-$ns attach-agent $n2 $tcpsendagent2
-
-$ns attach-agent $n6 $tcprecvagent1
-$ns attach-agent $n6 $tcprecvagent2
-
-set app1 [new Application/FTP]
-set app2 [new Application/FTP]
-
-$app1 attach-agent $tcpsendagent1
-$app2 attach-agent $tcpsendagent2
-
-#As soon as you create agents make sure i connect them
-
-$ns connect $tcpsendagent1 $tcprecvagent1
-$ns connect $tcpsendagent2 $tcprecvagent2
-
-$ns at 0.1 "$app1 start"
-$ns at 0.4 "$app2 start"
-
-
-
-
-proc finish { } {
-global ns tr nam
-$ns flush-trace
-close $tr
-close $nam
-#exec nam namfile_tcp_ls.nam &
-exec gawk -f analysis_BW-Delay.awk LAN.tr &
-exec xgraph file3.xg &
-exit 0
-}
-
-$ns at 10 "finish"
-
-$ns run
-
------------------------analysis_BW-Delay.awk-------------------------------------
-BEGIN{
-drop=0
-recv=0
-starttime1=0
-endtime1=0
-latency1=0
-filesize1=0
-starttime2=0
-endtime2=0
-latency2=0
-filesize2=0
-flag0=0
-flag1=0
-bandwidth1=0
-bandwidth2=0
-}
-
-{
-
-if($1=="r" && $3==6)
-{
-if(flag1=0)
-{
-flag1=1
-starttime1=$2
-}
-filesize1+=$6
-endtime1=$2
-latency=endtime1-starttime1
-bandwidth1=filesize1/latency
-printf "%f %f\n", endtime1, bandwidth1 >> "file3.xg"
-
-}
-
-}
-END{
-print("\n\n\n Final Values..")
-print("\n\nfilesize : ",filesize1)
-latency=endtime1-starttime1
-print("\nlatency :",latency)
-bandwidth1=filesize1/latency
-print("\n Throughput (Mbps):",bandwidth1/10^6)
-}
-
---------------------------------------------Wireless LAN----------------------
-Mac/802_11 set dataRate_ 1Mb
-set val(chan) Channel/WirelessChannel
-set val(prop) Propagation/TwoRayGround
-set val(ant) Antenna/OmniAntenna
-set val(ll) LL
-set val(ifq) Queue/DropTail/PriQueue
-set val(ifqlen) 50
-set val(netif) Phy/WirelessPhy
-set val(mac) Mac/802_11
-set val(nn) 15
-set val(rp) AODV
-set val(x) 800
-set val(y) 800
-
-set ns [new Simulator]
-set f [open complexdcf.tr w]
-$ns trace-all $f
-set namtrace [open complexdcf.nam w]
-$ns namtrace-all-wireless $namtrace $val(x) $val(y)
-set f0 [open C_DCF_AT.tr w]
-set topo [new Topography]
-$topo load_flatgrid 800 800
-create-god $val(nn)
-set chan_1 [new $val(chan)]
-$ns node-config -adhocRouting $val(rp) -llType $val(ll) -macType $val(mac) -ifqType $val(ifq) -ifqLen $val(ifqlen) -antType $val(ant) -propType $val(prop) -phyType $val(netif) -topoInstance $topo -agentTrace OFF -routerTrace ON -macTrace ON -movementTrace OFF -channel $chan_1
-
-proc finish {} {
-    global ns f f0 namtrace
-    $ns flush-trace
-    close $f0
-    exec nam -r 5m complexdcf.nam &
-    exit 0
-}
-
-proc record {} {
-    global sink1 sink3 sink7 sink10 sink11 f0
-    set ns [Simulator instance]
-    set time 0.5
-    set bw0 [$sink3 set bytes_]
-    set bw3 [$sink3 set bytes_]
-    set bw7 [$sink7 set bytes_]
-    set bw10 [$sink10 set bytes_]
-    set bw11 [$sink11 set bytes_]
-    set now [$ns now]
-    puts $f0 "$now [expr ($bw0+$bw3+$bw7+$bw10+$bw11)/$time*8/1000000]"
-    $sink1 set bytes_ 0
-    $sink3 set bytes_ 0
-    $sink7 set bytes_ 0
-    $sink10 set bytes_ 0
-    $sink11 set bytes_ 0
-    $ns at [expr $now+$time] "record"
-}
-
-for {set i 0} {$i < $val(nn) } {incr i} {
-    set n($i) [$ns node]
-    $n($i) random-motion 0 ;
-}
-
-for {set i 0} {$i < $val(nn)} {incr i} {
-    $ns initial_node_pos $n($i) 30+i*100
-}
-
-for {set i 0} {$i < $val(nn)} {incr i} {
-    $n($i) set X_ 0.0
-    $n($i) set Y_ 0.0
-    $n($i) set Z_ 0.0
-}
-
-$ns at 0.0 "$n(0) setdest 100.0 100.0 3000.0"
-$ns at 0.0 "$n(1) setdest 200.0 200.0 3000.0"
-$ns at 0.0 "$n(2) setdest 300.0 200.0 3000.0"
-$ns at 0.0 "$n(3) setdest 400.0 300.0 3000.0"
-$ns at 0.0 "$n(4) setdest 500.0 300.0 3000.0"
-$ns at 0.0 "$n(5) setdest 600.0 400.0 3000.0"
-$ns at 0.0 "$n(6) setdest 600.0 100.0 3000.0"
-$ns at 0.0 "$n(7) setdest 600.0 200.0 3000.0"
-$ns at 0.0 "$n(8) setdest 600.0 300.0 3000.0"
-$ns at 0.0 "$n(9) setdest 600.0 350.0 3000.0"
-$ns at 0.0 "$n(10) setdest 700.0 100.0 3000.0"
-$ns at 0.0 "$n(11) setdest 700.0 200.0 3000.0"
-$ns at 0.0 "$n(12) setdest 700.0 300.0 3000.0"
-$ns at 0.0 "$n(13) setdest 700.0 350.0 3000.0"
-$ns at 0.0 "$n(14) setdest 700.0 400.0 3000.0"
-$ns at 2.0 "$n(5) setdest 100.0 400.0 500.0"
-$ns at 1.5 "$n(3) setdest 450.0 150.0 500.0"
-$ns at 50.0 "$n(7) setdest 300.0 400.0 500.0"
-$ns at 2.0 "$n(10) setdest 200.0 400.0 500.0"
-$ns at 2.0 "$n(11) setdest 650.0 400.0 500.0"
-
-set sink1 [new Agent/LossMonitor]
-set sink3 [new Agent/LossMonitor]
-set sink7 [new Agent/LossMonitor]
-set sink10 [new Agent/LossMonitor]
-set sink11 [new Agent/LossMonitor]
-$ns attach-agent $n(1) $sink1
-$ns attach-agent $n(3) $sink3
-$ns attach-agent $n(7) $sink7
-$ns attach-agent $n(10) $sink10
-$ns attach-agent $n(11) $sink11
-
-set tcp0 [new Agent/TCP]
-$ns attach-agent $n(0) $tcp0
-set tcp2 [new Agent/TCP]
-$ns attach-agent $n(2) $tcp2
-set tcp4 [new Agent/TCP]
-$ns attach-agent $n(4) $tcp4
-set tcp5 [new Agent/TCP]
-$ns attach-agent $n(5) $tcp5
-set tcp9 [new Agent/TCP]
-$ns attach-agent $n(9) $tcp9
-set tcp13 [new Agent/TCP]
-$ns attach-agent $n(13) $tcp13
-set tcp6 [new Agent/TCP]
-$ns attach-agent $n(6) $tcp6
-set tcp14 [new Agent/TCP]
-$ns attach-agent $n(14) $tcp14
-set tcp8 [new Agent/TCP]
-$ns attach-agent $n(8) $tcp8
-set tcp12 [new Agent/TCP]
-$ns attach-agent $n(12) $tcp12
-
-set ftp9 [new Application/FTP]
-$ftp9 attach-agent $tcp9
-$ftp9 set type_ FTP
-set ftp13 [new Application/FTP]
-$ftp13 attach-agent $tcp13
-$ftp13 set type_ FTP
-set ftp6 [new Application/FTP]
-$ftp6 attach-agent $tcp6
-$ftp6 set type_ FTP
-set ftp14 [new Application/FTP]
-$ftp14 attach-agent $tcp14
-$ftp14 set type_ FTP
-set ftp8 [new Application/FTP]
-$ftp8 attach-agent $tcp8
-$ftp8 set type_ FTP
-set ftp12 [new Application/FTP]
-$ftp12 attach-agent $tcp12
-$ftp12 set type_ FTP
-
-$ns connect $tcp0 $sink3
-$ns connect $tcp5 $sink3
-$ns connect $tcp2 $sink1
-$ns connect $tcp4 $sink1
-$ns connect $tcp9 $sink7
-$ns connect $tcp13 $sink7
-$ns connect $tcp6 $sink10
-$ns connect $tcp14 $sink10
-$ns connect $tcp8 $sink11
-$ns connect $tcp12 $sink11
-
-proc attach-CBR-traffic { node sink size interval } {
-    set ns [Simulator instance]
-    set cbr [new Agent/CBR]
-    $ns attach-agent $node $cbr
-    $cbr set packetSize_ $size
-    $cbr set interval_ $interval
-    $ns connect $cbr $sink
-    return $cbr
-}
-
-set cbr0 [attach-CBR-traffic $n(0) $sink3 1000 .015]
-set cbr1 [attach-CBR-traffic $n(5) $sink3 1000 .015]
-set cbr2 [attach-CBR-traffic $n(2) $sink1 1000 .015]
-set cbr3 [attach-CBR-traffic $n(4) $sink1 1000 .015]
-# Setting the begining and ending time of each connection
-
-$ns at 0.0 "record"
-$ns at 20.0 "$cbr0 start"
-$ns at 20.0 "$cbr2 start"
-$ns at 800.0 "$cbr0 stop"
-$ns at 850.0 "$cbr2 stop"
-$ns at 30.0 "$cbr1 start"
-$ns at 30.0 "$cbr3 start"
-$ns at 850.0 "$cbr1 stop"
-$ns at 870.0 "$cbr3 stop"
-$ns at 25.0 "$ftp6 start"
-$ns at 25.0 "$ftp14 start"
-$ns at 810.0 "$ftp6 stop"
-$ns at 860.0 "$ftp14 stop"
-$ns at 35.0 "$ftp9 start"
-$ns at 35.0 "$ftp13 start"
-$ns at 830.0 "$ftp9 stop"
-$ns at 889.0 "$ftp13 stop"
-$ns at 40.0 "$ftp8 start"
-$ns at 40.0 "$ftp12 start"
-$ns at 820.0 "$ftp8 stop"
-$ns at 890.0 "$ftp12 stop"
-$ns at 900.0 "finish"
-# Runnning the simulation
-puts "Start of simulation.."
-$ns run
-
-------------------------------------------routing_throughput.awk-----------------------------------
-BEGIN {
-recvdSize = 0
-startTime = 0.5
-stopTime = 5.0
-}
-
-{
-event = $1
-time = $2
-node_id = $3
-pkt_size = $6
-level = $4
-
-if (event == "s") {
-if (time < startTime) {
-startTime = time
-}
-}
-
-if (event == "r") {
-if (time > stopTime) {
-stopTime = time
-}
-recvdSize += pkt_size
-}
-}
-
-END {
-printf("Average Throughput[kbps] = %.2f\n StartTime=%.2f\nStopTime=%.2f\n",(recvdSize/(stopTime-startTime))*(8/1000),startTime,stopTime)
-}
------------------------------------------
-
-
 
