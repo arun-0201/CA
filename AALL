@@ -338,6 +338,34 @@ big = list(bigrams(fil))
 big_count = Counter(big)
 print(big_count)
 
+noun=input("Enter the Noun:")
+verb=input("Enter the Verb:")
+prep=input("Enter the preposition:")
+c_noun=count[noun]
+c_verb=count[verb]
+c_np=big_count[(noun,prep)] +big_count[(prep,noun)]
+print(c_np)
+c_vp=big_count[(verb,prep)] + big_count[(prep,verb)]
+print("count of noun:",c_noun)
+print("count of verb:",c_verb)
+print("pp with n:",c_np)
+print("pp with v:",c_vp)
+p_n=c_np/c_noun
+print("Probability of noun:",p_n)
+p_v=c_vp/c_verb
+print("Probability of verb:",p_v)
+p_vv=1- p_v
+print("prob:",p_vv)
+final_pro=(p_n * p_vv)/p_v
+final_prob=np.log(final_pro)
+print("FINAL:",final_prob)
+if final_prob > 0:
+ print("The Preposition is attached with Verb")
+elif final_prob < 0:
+ print("The Preposition is attached with Noun")
+else:
+ print("The Preposition attachment cannot be determined")
+ 
 -----------------------------------------------------------------
 import math
 
